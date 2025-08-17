@@ -932,7 +932,7 @@
                     <label for="edit-assigned-to">Assigné à :</label>
                     <select id="edit-assigned-to" name="assigned_to" class="form-control">
                         <option value="">-- Non assigné --</option>
-                        {% for user in active_users %}
+                        {% for user in users %}
                             <option value="{{ user.id }}">{{ user.nom }}</option>
                         {% endfor %}
                     </select>
@@ -1074,20 +1074,22 @@
                 });
             });
             
-            // Gestion de la fermeture des modales
-            document.querySelectorAll('.modal .close, .modal .btn-secondary').forEach(button => {
-                button.addEventListener('click', function() {
-                    const modal = this.closest('.modal');
-                    if (modal) {
-                        modal.classList.remove('show');
-                        setTimeout(() => {
-                            modal.style.display = 'none';
-                        }, 300); // Attendre la fin de l'animation
-                        document.body.style.overflow = 'auto'; // Rétablir le défilement de la page
-                    }
+            // Gestion de la fermeture de la modale
+            function closeAllModals() {
+                console.log('Fermeture de toutes les modales');
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.remove('show');
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                    }, 300);
                 });
+                document.body.style.overflow = 'auto';
+            }
+
+            document.querySelectorAll('.modal .close, .btn-secondary.close').forEach(btn => {
+                btn.addEventListener('click', closeAllModals);
             });
-            
+
             // Fermer la modale en cliquant en dehors
             window.addEventListener('click', function(event) {
                 if (event.target.classList.contains('modal')) {
@@ -1113,6 +1115,174 @@
                     }
                 }
                 return cookieValue;
+            }
+            
+            // Gestion de l'ouverture de la modale d'édition
+            document.addEventListener('click', function(e) {
+                const btnEdit = e.target.closest('.btn-edit');
+                if (!btnEdit) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const taskCard = btnEdit.closest('.card');
+                const taskId = btnEdit.getAttribute('data-task-id');
+                const taskDescription = taskCard.querySelector('.card-title').textContent.trim();
+                
+                // Déterminer la priorité actuelle
+                let taskPriority = 'LOW';
+                if (taskCard.classList.contains('priority-high')) {
+                    taskPriority = 'HIGH';
+                } else if (taskCard.classList.contains('priority-medium')) {
+                    taskPriority = 'MEDIUM';
+                }
+                
+                // Récupérer l'utilisateur assigné s'il existe
+                let assignedToId = '';
+                const assignedElement = taskCard.querySelector('.assigned-to');
+                if (assignedElement) {
+                    assignedToId = assignedElement.getAttribute('data-user-id') || '';
+                }
+                
+                // Déterminer le statut actuel
+                let status = 'TO DO';
+                const column = taskCard.closest('.column');
+                if (column) {
+                    const columnTitle = column.querySelector('.column-title').textContent;
+                    if (columnTitle.includes('En cours')) {
+                        status = 'IN PROGRESS';
+                    } else if (columnTitle.includes('Terminées')) {
+                        status = 'DONE';
+                    }
+                }
+                
+                console.log('Données de la tâche:', { taskId, taskDescription, taskPriority, assignedToId, status });
+                
+                // Remplir le formulaire
+                document.getElementById('edit-task-id').value = taskId;
+                document.getElementById('edit-description').value = taskDescription;
+                document.getElementById('edit-priority').value = taskPriority;
+                document.getElementById('edit-assigned-to').value = assignedToId;
+                document.getElementById('edit-status').value = status;
+                
+                // Ouvrir la modale d'édition
+                const modal = document.getElementById('editTaskModal');
+                if (modal) {
+                    console.log('Ouverture de la modale d\'édition');
+                    modal.style.display = 'flex';
+                    // Forcer le rendu
+                    void modal.offsetWidth;
+                    // Ajouter la classe show pour l'animation
+                    setTimeout(() => {
+                        modal.classList.add('show');
+                    }, 10);
+                    
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    console.error('Modale d\'édition non trouvée');
+                }
+            });
+            
+            // Gestion de la soumission du formulaire d'édition
+            const editTaskForm = document.getElementById('edit-task-form');
+            if (editTaskForm) {
+                editTaskForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const taskId = document.getElementById('edit-task-id').value;
+                    const formData = {
+                        description: document.getElementById('edit-description').value,
+                        priority: document.getElementById('edit-priority').value,
+                        assigned_to: document.getElementById('edit-assigned-to').value || null,
+                        status: document.getElementById('edit-status').value
+                    };
+                    
+                    console.log('Envoi des données de mise à jour:', formData);
+                    
+                    // Envoyer la requête AJAX
+                    fetch(`/tasks/${taskId}/update/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erreur réseau');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Réponse du serveur:', data);
+                        if (data.status === 'success') {
+                            // Mettre à jour l'interface utilisateur
+                            const taskCard = document.querySelector(`.card[data-task-id="${taskId}"]`);
+                            if (taskCard) {
+                                // Mettre à jour la description
+                                const titleElement = taskCard.querySelector('.card-title');
+                                if (titleElement) {
+                                    titleElement.textContent = formData.description;
+                                }
+                                
+                                // Mettre à jour la priorité (classes CSS)
+                                taskCard.className = 'card';
+                                taskCard.classList.add(`priority-${formData.priority.toLowerCase()}`);
+                                
+                                // Mettre à jour l'assigné
+                                const assignedElement = taskCard.querySelector('.assigned-to');
+                                const assignedToSelect = document.getElementById('edit-assigned-to');
+                                const selectedOption = assignedToSelect.options[assignedToSelect.selectedIndex];
+                                
+                                if (assignedElement) {
+                                    if (formData.assigned_to) {
+                                        assignedElement.textContent = selectedOption.text;
+                                        assignedElement.setAttribute('data-user-id', formData.assigned_to);
+                                    } else {
+                                        assignedElement.textContent = 'Non assigné';
+                                        assignedElement.removeAttribute('data-user-id');
+                                    }
+                                }
+                                
+                                // Si le statut a changé, déplacer la carte vers la bonne colonne
+                                const currentColumn = taskCard.closest('.column');
+                                let targetColumn = null;
+                                
+                                // Trouver la colonne cible en fonction du statut
+                                const columns = document.querySelectorAll('.column');
+                                columns.forEach(column => {
+                                    const title = column.querySelector('.column-title').textContent;
+                                    if ((formData.status === 'TO DO' && title.includes('À faire')) ||
+                                        (formData.status === 'IN PROGRESS' && title.includes('En cours')) ||
+                                        (formData.status === 'DONE' && title.includes('Terminées'))) {
+                                        targetColumn = column;
+                                    }
+                                });
+                                
+                                if (targetColumn && (!currentColumn || !currentColumn.isSameNode(targetColumn))) {
+                                    const columnContent = targetColumn.querySelector('.column-content');
+                                    if (columnContent) {
+                                        columnContent.appendChild(taskCard);
+                                        console.log('Tâche déplacée vers la colonne:', targetColumn.querySelector('.column-title').textContent);
+                                    }
+                                }
+                            }
+                            
+                            // Fermer la modale
+                            closeAllModals();
+                            
+                            // Afficher un message de succès
+                            alert('Tâche mise à jour avec succès');
+                        } else {
+                            alert('Erreur lors de la mise à jour de la tâche: ' + (data.message || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        alert('Une erreur est survenue lors de la mise à jour de la tâche: ' + error.message);
+                    });
+                });
             }
         });
     </script>

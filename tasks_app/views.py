@@ -9,6 +9,7 @@ from django.core import serializers
 import json
 
 from .models import Task, Personne
+from django.forms.models import model_to_dict
 
 
 def task_kanban(request):
@@ -86,5 +87,44 @@ def get_users_json(request):
     try:
         users = list(Personne.objects.filter(actif=True).values('id', 'nom'))
         return JsonResponse(users, safe=False)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def update_task(request, task_id):
+    try:
+        task = get_object_or_404(Task, id=task_id)
+        data = json.loads(request.body)
+        
+        # Mise à jour des champs de la tâche
+        if 'description' in data:
+            task.description = data['description']
+        if 'status' in data:
+            task.status = data['status']
+        if 'priority' in data:
+            task.priority = data['priority']
+        if 'assigned_to' in data:
+            if data['assigned_to']:
+                task.assigned_to = get_object_or_404(Personne, id=data['assigned_to'])
+            else:
+                task.assigned_to = None
+        
+        task.save()
+        
+        # Retourner la tâche mise à jour
+        task_data = model_to_dict(task)
+        if task.assigned_to:
+            task_data['assigned_to'] = {'id': task.assigned_to.id, 'name': task.assigned_to.nom}
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Tâche mise à jour avec succès',
+            'task': task_data
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Données JSON invalides'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
