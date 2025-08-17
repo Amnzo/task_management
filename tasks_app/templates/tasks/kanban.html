@@ -910,7 +910,7 @@
     <div id="editTaskModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3>Modifier la tâche</h3>
+            <h3>Modifier la tâche {{users}}</h3>
             <form id="edit-task-form">
                 <input type="hidden" id="edit-task-id" name="task_id">
 
@@ -928,15 +928,9 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="edit-assigned-to">Assigné à :</label>
-                    <select id="edit-assigned-to" name="assigned_to" class="form-control">
-                        <option value="">-- Non assigné --</option>
-                        {% for user in users %}
-                            <option value="{{ user.id }}">{{ user.nom }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+               <!-- Champ Assigné à supprimé pour éviter les modifications d'assignation -->
+               <input type="hidden" id="edit-assigned-to" name="assigned_to" value="">
+
 
                 <div class="form-group">
                     <label for="edit-status">Statut :</label>
@@ -1162,7 +1156,7 @@
                 document.getElementById('edit-task-id').value = taskId;
                 document.getElementById('edit-description').value = taskDescription;
                 document.getElementById('edit-priority').value = taskPriority;
-                document.getElementById('edit-assigned-to').value = assignedToId;
+                // Ne pas modifier l'assignation
                 document.getElementById('edit-status').value = status;
                 
                 // Ouvrir la modale d'édition
@@ -1193,7 +1187,7 @@
                     const formData = {
                         description: document.getElementById('edit-description').value,
                         priority: document.getElementById('edit-priority').value,
-                        assigned_to: document.getElementById('edit-assigned-to').value || null,
+                        // Ne pas inclure assigned_to pour ne pas modifier l'assignation
                         status: document.getElementById('edit-status').value
                     };
                     
@@ -1230,20 +1224,7 @@
                                 taskCard.className = 'card';
                                 taskCard.classList.add(`priority-${formData.priority.toLowerCase()}`);
                                 
-                                // Mettre à jour l'assigné
-                                const assignedElement = taskCard.querySelector('.assigned-to');
-                                const assignedToSelect = document.getElementById('edit-assigned-to');
-                                const selectedOption = assignedToSelect.options[assignedToSelect.selectedIndex];
-                                
-                                if (assignedElement) {
-                                    if (formData.assigned_to) {
-                                        assignedElement.textContent = selectedOption.text;
-                                        assignedElement.setAttribute('data-user-id', formData.assigned_to);
-                                    } else {
-                                        assignedElement.textContent = 'Non assigné';
-                                        assignedElement.removeAttribute('data-user-id');
-                                    }
-                                }
+                                // Ne plus mettre à jour l'assigné car ce champ a été retiré du formulaire
                                 
                                 // Si le statut a changé, déplacer la carte vers la bonne colonne
                                 const currentColumn = taskCard.closest('.column');

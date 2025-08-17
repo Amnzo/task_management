@@ -16,7 +16,7 @@ class Personne(models.Model):
     )
 
     def __str__(self):
-        return self.nom
+        return f"{self.nom}, {self.id}"
 
 
 class Task(models.Model):

@@ -95,8 +95,11 @@ def get_users_json(request):
 @require_http_methods(["POST"])
 def update_task(request, task_id):
     try:
+        print(f"Début de la mise à jour de la tâche {task_id}")
         task = get_object_or_404(Task, id=task_id)
         data = json.loads(request.body)
+        print(f"Données reçues: {data}")
+        print(f"Headers: {request.headers}")
         
         # Mise à jour des champs de la tâche
         if 'description' in data:
