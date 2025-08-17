@@ -1,20 +1,24 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.generic import ListView
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import Case, When, Value, IntegerField
+import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from django.core import serializers
-import json
-
 from .models import Task, Personne
-from .forms import PersonneForm, TaskForm
+from .forms import TaskForm, PersonneForm, TaskForm
 from django.forms.models import model_to_dict
 from django.contrib import messages
 
 
 from django.db.models import Case, When, Value, IntegerField
+from django.views.generic import ListView
 
 def task_kanban(request):
     tasks = Task.objects.filter(archived=False).annotate(
@@ -188,3 +192,38 @@ def task_create(request):
         'form': form,
         'title': 'Nouvelle tâche'
     })
+
+class ArchivedTaskListView(ListView):
+    model = Task
+    template_name = 'tasks/archived_tasks.html'
+    context_object_name = 'tasks'
+    
+    def get_queryset(self):
+        return Task.objects.filter(archived=True).order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['active_tab'] = 'archived'
+        return context
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def archive_all_done_tasks(request):
+    """Vue pour archiver toutes les tâches terminées"""
+    print("******************************")
+    try:
+        # Récupérer et archiver toutes les tâches terminées non archivées
+        updated = Task.objects.filter(status='DONE', archived=False).update(archived=True)
+        print(updated)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{updated} tâche(s) archivée(s) avec succès',
+            'count': updated
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)

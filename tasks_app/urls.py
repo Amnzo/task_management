@@ -9,4 +9,6 @@ urlpatterns = [
     path('tasks/<int:task_id>/update/', views.update_task, name='update_task'),
     path('tasks/new/', views.task_create, name='task_create'),
     path('users/new/', views.user_create, name='user_create'),
+    path('archived/', views.ArchivedTaskListView.as_view(), name='archived_tasks'),
+    path('archive_all_done/', views.archive_all_done_tasks, name='archive_all_done'),
 ]

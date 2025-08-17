@@ -15,15 +15,28 @@
         }
         
         .filter-select {
-            padding: 8px 12px;
+            padding: 8px 16px;
             border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background-color: white;
+            border: none;
+            background-color: #e2e8f0;
             font-size: 14px;
-            color: var(--text-primary);
+            font-weight: 500;
+            color: #1e293b;
             cursor: pointer;
             transition: all 0.2s;
             min-width: 200px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%231e293b%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem top 50%;
+            background-size: 0.65rem auto;
+            padding-right: 2.5rem;
+        }
+        
+        .filter-select:hover {
+            background-color: #cbd5e1;
         }
         
         .filter-select:focus {
@@ -182,9 +195,31 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        
+        .btn-archive-all {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        
+        .btn-archive-all:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-archive-all i {
+            font-size: 0.9em;
         }
 
         .column-title {
@@ -746,6 +781,10 @@
             Gestion des tâches
         </h1>
         <div class="header-actions">
+            <a href="{% url 'archived_tasks' %}" class="btn-primary" style="background-color: #6b7280;">
+                <i class="fas fa-archive"></i>
+                Tâches archivées
+            </a>
             <div class="filter-container" style="margin-right: 15px;">
                 <select id="user-filter" class="filter-select">
                     <option value="">Tous les utilisateurs</option>
@@ -762,6 +801,7 @@
                 <i class="fas fa-plus"></i>
                 Nouvelle tâche
             </a>
+            
         </div>
     </div>
 
@@ -878,6 +918,9 @@
                     <div class="column-title">
                         <i class="fas fa-circle-check" style="color: #059669;"></i>
                         Terminées
+                        <button id="archive-all-btn" class="btn-archive-all" title="Archiver toutes les tâches terminées">
+                            <i class="fas fa-archive"></i> Archiver tout
+                        </button>
                     </div>
                     <div class="column-count">{{ done|length }}</div>
                 </div>
@@ -1179,7 +1222,7 @@
                 }
             });
             
-            // Fonction utilitaire pour récupérer le token CSRF
+            // Fonction pour récupérer le token CSRF
             function getCookie(name) {
                 let cookieValue = null;
                 if (document.cookie && document.cookie !== '') {
@@ -1194,6 +1237,38 @@
                 }
                 return cookieValue;
             }
+            
+            // Gestion de l'archivage de toutes les tâches terminées
+            document.getElementById('archive-all-btn').addEventListener('click', function() {
+                if (confirm('Êtes-vous sûr de vouloir archiver toutes les tâches terminées ?')) {
+                    fetch('{% url "archive_all_done" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({})
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Erreur lors de l\'archivage des tâches');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Recharger la page pour afficher les changements
+                            window.location.reload();
+                        } else {
+                            alert('Erreur: ' + (data.message || 'Une erreur est survenue'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        alert('Erreur lors de l\'archivage des tâches: ' + error.message);
+                    });
+                }
+            });
             
             // Gestion de l'ouverture de la modale d'édition
             document.addEventListener('click', function(e) {
