@@ -1,0 +1,326 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban - TaskDoor</title>
+    <link rel="stylesheet" href="{% static 'tasks/css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <h1>Gestion des tâches</h1>
+    
+    <div id="notification" class="notification"></div>
+
+    <div class="kanban">
+        <!-- À FAIRE -->
+        <div class="column">
+            <h2>À faire</h2>
+            {% for task in todo %}
+                <div class="card priority-{{ task.priority }}" draggable="true" data-task-id="{{ task.id }}">
+                    <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">{{ task.get_status_display }}</span>
+                    <div class="card-title">{{ task.description|truncatechars:100 }}</div>
+                    <div class="card-meta">
+                        <div class="meta-row">
+                            <div class="meta-item" title="Créé par">
+                                <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                            </div>
+                            <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                            </div>
+                            <div class="meta-item" title="Assigné à">
+                                <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button class="btn btn-delete" onclick="deleteTask({{ task.id }}); return false;" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="status-actions">
+                        <button class="status-btn" onclick="updateStatus({{ task.id }}, 'IN PROGRESS'); return false;">
+                            <i class="fas fa-play"></i> Commencer
+                        </button>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="far fa-check-circle"></i>
+                    <p>Aucune tâche à faire</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- EN COURS -->
+        <div class="column">
+            <h2>En cours</h2>
+            {% for task in inprogress %}
+                <div class="card priority-{{ task.priority }}" draggable="true" data-task-id="{{ task.id }}">
+                    <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">{{ task.get_status_display }}</span>
+                    <div class="card-title">{{ task.description|truncatechars:100 }}</div>
+                    <div class="card-meta">
+                        <div class="meta-row">
+                            <div class="meta-item" title="Créé par">
+                                <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                            </div>
+                            <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                            </div>
+                            <div class="meta-item" title="Assigné à">
+                                <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-edit" onclick="editTask({{ task.id }}); return false;" title="Modifier">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button class="btn btn-delete" onclick="deleteTask({{ task.id }}); return false;" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="status-actions">
+                        <button class="status-btn" onclick="updateStatus({{ task.id }}, 'TO DO'); return false;">
+                            <i class="fas fa-arrow-left"></i> À faire
+                        </button>
+                        <button class="status-btn active" onclick="updateStatus({{ task.id }}, 'DONE'); return false;">
+                            <i class="fas fa-check"></i> Terminer
+                        </button>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-tasks"></i>
+                    <p>Aucune tâche en cours</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- TERMINÉES -->
+        <div class="column">
+            <h2>Terminées</h2>
+            {% for task in done %}
+                <div class="card priority-{{ task.priority }}" draggable="true" data-task-id="{{ task.id }}">
+                    <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">{{ task.get_status_display }}</span>
+                    <div class="card-title">{{ task.description|truncatechars:100 }}</div>
+                    <div class="card-meta">
+                        <div class="meta-row">
+                            <div class="meta-item" title="Créé par">
+                                <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                            </div>
+                            <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                            </div>
+                            <div class="meta-item" title="Assigné à">
+                                <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-edit" onclick="editTask({{ task.id }}); return false;" title="Modifier">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button class="btn btn-delete" onclick="deleteTask({{ task.id }}); return false;" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="status-actions">
+                        <button class="status-btn" onclick="updateStatus({{ task.id }}, 'IN PROGRESS'); return false;">
+                            <i class="fas fa-undo"></i> Reprendre
+                        </button>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Aucune tâche terminée</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function updateStatus(taskId, newStatus) {
+            fetch(`/tasks/${taskId}/update_status/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFTTOKEN': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    status: newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Erreur lors de la mise à jour du statut');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erreur lors de la communication avec le serveur');
+            });
+        }
+
+        function editTask(taskId) {
+            // Implement edit functionality
+            alert(`Modification de la tâche #${taskId}`);
+            // You can open a modal or redirect to an edit page
+            // window.location.href = `/tasks/${taskId}/edit/`;
+        }
+
+        function deleteTask(taskId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
+                fetch(`/tasks/${taskId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFTTOKEN': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Erreur lors de la suppression de la tâche');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Erreur lors de la communication avec le serveur');
+                });
+            }
+        }
+
+        // Function to show notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Make cards draggable
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                card.setAttribute('draggable', 'true');
+                
+                card.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', card.dataset.taskId);
+                    setTimeout(() => {
+                        card.classList.add('dragging');
+                    }, 0);
+                });
+                
+                card.addEventListener('dragend', function() {
+                    card.classList.remove('dragging');
+                });
+            });
+
+            const columns = document.querySelectorAll('.column');
+            
+            columns.forEach(column => {
+                column.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    const draggingCard = document.querySelector('.dragging');
+                    if (draggingCard) {
+                        const afterElement = getDragAfterElement(column, e.clientY);
+                        if (afterElement) {
+                            column.insertBefore(draggingCard, afterElement);
+                        } else {
+                            column.appendChild(draggingCard);
+                        }
+                    }
+                });
+
+                column.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    const taskId = e.dataTransfer.getData('text/plain');
+                    const card = document.querySelector(`[data-task-id="${taskId}"]`);
+                    if (card) {
+                        const afterElement = getDragAfterElement(column, e.clientY);
+                        if (afterElement) {
+                            column.insertBefore(card, afterElement);
+                        } else {
+                            column.appendChild(card);
+                        }
+                        
+                        // Update status based on the column
+                        let newStatus = 'TO DO';
+                        const columnTitle = column.querySelector('h2').textContent;
+                        let statusName = 'À faire';
+                        
+                        if (columnTitle === 'En cours') {
+                            newStatus = 'IN PROGRESS';
+                            statusName = 'En cours';
+                        } else if (columnTitle === 'Terminées') {
+                            newStatus = 'DONE';
+                            statusName = 'Terminées';
+                        }
+                        
+                        // Send update to server
+                        fetch(`/tasks/${taskId}/update_status/`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFTOKEN': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                status: newStatus
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.status === 'success') {
+                                showNotification(`Tâche déplacée vers: ${statusName}`);
+                            } else {
+                                console.error('Server error:', data.message || 'Unknown error');
+                                window.location.reload();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error updating task status:', error);
+                            window.location.reload();
+                        });
+                    }
+                });
+            });
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+    </script>
+</body>
+</html>
