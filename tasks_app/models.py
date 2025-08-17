@@ -27,9 +27,9 @@ class Task(models.Model):
     )
 
     PRIORITY_CHOICES = (
-        ('HIGH', 'Haute'),
-        ('MEDIUM', 'Moyenne'),
-        ('LOW', 'Basse'),
+        ('HIGH', 'H'),
+        ('MEDIUM', 'M'),
+        ('LOW', 'L'),
     )
 
     description = models.TextField()

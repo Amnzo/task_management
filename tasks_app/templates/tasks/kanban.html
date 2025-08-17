@@ -1,10 +1,14 @@
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskDoor - Gestion Professionnelle des Tâches</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-      <style>
+    <style>
         :root {
             --primary-color: #6366f1;
             --primary-dark: #4f46e5;
@@ -35,8 +39,10 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            height: 100vh;
             line-height: 1.6;
             color: var(--text-primary);
+            overflow: hidden; /* Évite le scroll global */
         }
 
         /* Header moderne */
@@ -88,22 +94,23 @@
             box-shadow: var(--shadow-lg);
         }
 
-        /* Conteneur principal */
+        /* Conteneur principal - plein écran */
         .kanban-container {
-            padding: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
+            padding: 1rem;
+            height: calc(100vh - 80px); /* Hauteur totale moins la hauteur du header */
+            width: 100%;
         }
 
-        /* Kanban board */
+        /* Kanban board - plein écran */
         .kanban {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 1rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            height: 100%;
+            width: 100%;
         }
 
-        /* Colonnes modernisées */
+        /* Colonnes modernisées - pleine hauteur */
         .column {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
@@ -112,10 +119,11 @@
             box-shadow: var(--shadow-md);
             border: 1px solid rgba(255, 255, 255, 0.2);
             transition: transform 0.2s ease;
-            max-height: 80vh;
+            height: 100%;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            min-height: 0; /* Important pour le scroll */
         }
 
         .column:hover {
@@ -185,6 +193,19 @@
             box-shadow: var(--shadow-xl);
         }
 
+        /* Priority colors */
+        .priority-high:before {
+            background: linear-gradient(90deg, var(--danger-color), #fca5a5);
+        }
+
+        .priority-medium:before {
+            background: linear-gradient(90deg, var(--warning-color), #fcd34d);
+        }
+
+        .priority-low:before {
+            background: linear-gradient(90deg, var(--secondary-color), #86efac);
+        }
+
         /* Status badge moderne */
         .status-badge {
             display: inline-flex;
@@ -199,13 +220,13 @@
             letter-spacing: 0.025em;
         }
 
-        .status-TO {
+        .status-TO, .status-TODO {
             background: rgba(249, 115, 22, 0.1);
             color: #ea580c;
             border: 1px solid rgba(249, 115, 22, 0.2);
         }
 
-        .status-IN {
+        .status-IN, .status-INPROGRESS {
             background: rgba(59, 130, 246, 0.1);
             color: #2563eb;
             border: 1px solid rgba(59, 130, 246, 0.2);
@@ -377,31 +398,26 @@
             transform: translateX(0);
         }
 
-        /* Animations et effets */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        /* Responsive design - plein écran */
+        @media (max-width: 1200px) {
+            .kanban {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        .card {
-            animation: slideIn 0.3s ease-out;
-        }
-
-        /* Responsive design */
         @media (max-width: 768px) {
             .kanban-container {
-                padding: 1rem;
+                padding: 0.5rem;
+                height: calc(100vh - 120px); /* Ajuster pour le header mobile */
             }
 
             .kanban {
                 grid-template-columns: 1fr;
-                gap: 1rem;
+                gap: 0.5rem;
+            }
+
+            .column {
+                padding: 1rem;
             }
 
             .header {
@@ -416,166 +432,216 @@
             }
         }
 
-        /* Scrollbar personnalisée */
+        /* Scrollbar personnalisée - plus visible */
         .column::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         .column::-webkit-scrollbar-track {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
         }
 
         .column::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
         }
 
         .column::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Zone de contenu des cartes avec scroll */
+        .column-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem;
         }
     </style>
-
-
-    </style>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kanban - TaskDoor</title>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <h1>Gestion des tâches</h1>
-    
+    <!-- Header moderne -->
+    <div class="header">
+        <h1>
+            <i class="fas fa-tasks"></i>
+            Gestion des tâches
+        </h1>
+        <div class="header-actions">
+            <button class="btn-primary">
+                <i class="fas fa-plus"></i>
+                Nouvelle tâche
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification -->
     <div id="notification" class="notification"></div>
 
-    <div class="kanban">
-        <!-- À FAIRE -->
-        <div class="column">
-            <h2>À faire</h2>
-            {% for task in todo %}
-                <div class="card priority-{{ task.priority }}" draggable="true" data-task-id="{{ task.id }}">
-                    <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">{{ task.get_status_display }}</span>
-                    <div class="card-title">{{ task.description|truncatechars:100 }}</div>
-                    <div class="card-meta">
-                        <div class="meta-row">
-                            <div class="meta-item" title="Créé par">
-                                <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
-                            </div>
-                            <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
-                                <i class="fas fa-flag"></i> {{ task.get_priority_display }}
-                            </div>
-                            <div class="meta-item" title="Assigné à">
-                                <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
-                            </div>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button class="btn btn-delete" onclick="deleteTask({{ task.id }}); return false;" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+    <!-- Conteneur principal -->
+    <div class="kanban-container">
+        <div class="kanban">
+            <!-- À FAIRE -->
+            <div class="column">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-circle-pause" style="color: #ea580c;"></i>
+                        À faire
                     </div>
-                    <div class="status-actions">
-                        <button class="status-btn" onclick="updateStatus({{ task.id }}, 'IN PROGRESS'); return false;">
-                            <i class="fas fa-play"></i> Commencer
-                        </button>
-                    </div>
+                    <div class="column-count">{{ todo|length }}</div>
                 </div>
-            {% empty %}
-                <div class="empty-state">
-                    <i class="far fa-check-circle"></i>
-                    <p>Aucune tâche à faire</p>
-                </div>
-            {% endfor %}
-        </div>
 
-        <!-- EN COURS -->
-        <div class="column">
-            <h2>En cours</h2>
-            {% for task in inprogress %}
-                <div class="card priority-{{ task.priority }}" draggable="true" data-task-id="{{ task.id }}">
-                    <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">{{ task.get_status_display }}</span>
-                    <div class="card-title">{{ task.description|truncatechars:100 }}</div>
-                    <div class="card-meta">
-                        <div class="meta-row">
-                            <div class="meta-item" title="Créé par">
-                                <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
-                            </div>
-                            <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
-                                <i class="fas fa-flag"></i> {{ task.get_priority_display }}
-                            </div>
-                            <div class="meta-item" title="Assigné à">
-                                <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
-                            </div>
-                        </div>
-                        <div class="card-actions">
-                            <button class="btn btn-edit" onclick="editTask({{ task.id }}); return false;" title="Modifier">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button class="btn btn-delete" onclick="deleteTask({{ task.id }}); return false;" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="status-actions">
-                        <button class="status-btn" onclick="updateStatus({{ task.id }}, 'TO DO'); return false;">
-                            <i class="fas fa-arrow-left"></i> À faire
-                        </button>
-                        <button class="status-btn active" onclick="updateStatus({{ task.id }}, 'DONE'); return false;">
-                            <i class="fas fa-check"></i> Terminer
-                        </button>
-                    </div>
-                </div>
-            {% empty %}
-                <div class="empty-state">
-                    <i class="fas fa-tasks"></i>
-                    <p>Aucune tâche en cours</p>
-                </div>
-            {% endfor %}
-        </div>
+                <div class="column-content">
+                    {% for task in todo %}
+                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
+                            <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">
+                                <i class="fas fa-clock"></i>
+                                {{ task.get_status_display }}
+                            </span>
+                            <div class="card-title">{{ task.description }}</div>
 
-        <!-- TERMINÉES -->
-        <div class="column">
-            <h2>Terminées</h2>
-            {% for task in done %}
-                <div class="card priority-{{ task.priority }}" draggable="true" data-task-id="{{ task.id }}">
-                    <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">{{ task.get_status_display }}</span>
-                    <div class="card-title">{{ task.description|truncatechars:100 }}</div>
-                    <div class="card-meta">
-                        <div class="meta-row">
-                            <div class="meta-item" title="Créé par">
-                                <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                            <div class="card-footer">
+                                <div class="card-meta">
+                                    <div class="meta-left">
+                                        <div class="meta-item" title="Créé par">
+                                            <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                                        </div>
+                                        <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                            <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                                        </div>
+                                        <div class="meta-item" title="Assigné à">
+                                            <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                                        </div>
+
+                                         <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier la tâche">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <button class="btn btn-reassign" onclick="reassignTask({{ task.id }})" title="Réassigner la tâche">
+                                        <i class="fas fa-user-plus"></i>
+                                    </button>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
-                                <i class="fas fa-flag"></i> {{ task.get_priority_display }}
-                            </div>
-                            <div class="meta-item" title="Assigné à">
-                                <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
-                            </div>
+
+
                         </div>
-                        <div class="card-actions">
-                            <button class="btn btn-edit" onclick="editTask({{ task.id }}); return false;" title="Modifier">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button class="btn btn-delete" onclick="deleteTask({{ task.id }}); return false;" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                    {% empty %}
+                        <div class="empty-state">
+                            <i class="far fa-check-circle"></i>
+                            <p>Aucune tâche à faire</p>
                         </div>
-                    </div>
-                    <div class="status-actions">
-                        <button class="status-btn" onclick="updateStatus({{ task.id }}, 'IN PROGRESS'); return false;">
-                            <i class="fas fa-undo"></i> Reprendre
-                        </button>
-                    </div>
+                    {% endfor %}
                 </div>
-            {% empty %}
-                <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>Aucune tâche terminée</p>
+            </div>
+
+            <!-- EN COURS -->
+            <div class="column">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-circle-play" style="color: #2563eb;"></i>
+                        En cours
+                    </div>
+                    <div class="column-count">{{ inprogress|length }}</div>
                 </div>
-            {% endfor %}
+
+                <div class="column-content">
+                    {% for task in inprogress %}
+                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
+                            <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                {{ task.get_status_display }}
+                            </span>
+                            <div class="card-title">{{ task.description }}</div>
+
+                            <div class="card-footer">
+                                <div class="card-meta">
+                                    <div class="meta-left">
+                                        <div class="meta-item" title="Créé par">
+                                            <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                                        </div>
+                                        <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                            <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                                        </div>
+                                        <div class="meta-item" title="Assigné à">
+                                            <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                                        </div>
+
+                                        <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier la tâche">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </button>
+                                    <button class="btn btn-reassign" onclick="reassignTask({{ task.id }})" title="Réassigner la tâche">
+                                        <i class="fas fa-user-plus"></i>
+                                    </button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">
+                            <i class="fas fa-tasks"></i>
+                            <p>Aucune tâche en cours</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- TERMINÉES -->
+            <div class="column">
+                <div class="column-header">
+                    <div class="column-title">
+                        <i class="fas fa-circle-check" style="color: #059669;"></i>
+                        Terminées
+                    </div>
+                    <div class="column-count">{{ done|length }}</div>
+                </div>
+
+                <div class="column-content">
+                    {% for task in done %}
+                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
+                            <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">
+                                <i class="fas fa-check-circle"></i>
+                                {{ task.get_status_display }}
+                            </span>
+                            <div class="card-title">{{ task.description }}</div>
+
+                            <div class="card-footer">
+                                <div class="card-meta">
+                                    <div class="meta-left">
+                                        <div class="meta-item" title="Créé par">
+                                            <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                                        </div>
+                                        <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                            <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                                        </div>
+                                        <div class="meta-item" title="Assigné à">
+                                            <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                                        </div>
+
+                                         <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier la tâche">
+                                        <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                        <button class="btn btn-reassign" onclick="reassignTask({{ task.id }})" title="Réassigner la tâche">
+                                            <i class="fas fa-user-plus"></i>
+                                        </button>
+
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                    {% empty %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Aucune tâche terminée</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -585,7 +651,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFTTOKEN': '{{ csrf_token }}'
+                    'X-CSRFTOKEN': '{{ csrf_token }}'
                 },
                 body: JSON.stringify({
                     status: newStatus
@@ -594,21 +660,21 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    showNotification('✅ Statut mis à jour avec succès');
                     window.location.reload();
                 } else {
-                    alert('Erreur lors de la mise à jour du statut');
+                    showNotification('❌ Erreur lors de la mise à jour du statut');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Erreur lors de la communication avec le serveur');
+                showNotification('❌ Erreur lors de la communication avec le serveur');
             });
         }
 
         function editTask(taskId) {
-            // Implement edit functionality
-            alert(`Modification de la tâche #${taskId}`);
-            // You can open a modal or redirect to an edit page
+            showNotification(`Mode édition pour la tâche #${taskId}`);
+            // Vous pouvez ouvrir un modal ou rediriger vers une page d'édition
             // window.location.href = `/tasks/${taskId}/edit/`;
         }
 
@@ -618,43 +684,45 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFTTOKEN': '{{ csrf_token }}'
+                        'X-CSRFTOKEN': '{{ csrf_token }}'
                     }
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        showNotification('✅ Tâche supprimée avec succès');
                         window.location.reload();
                     } else {
-                        alert('Erreur lors de la suppression de la tâche');
+                        showNotification('❌ Erreur lors de la suppression de la tâche');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Erreur lors de la communication avec le serveur');
+                    showNotification('❌ Erreur lors de la communication avec le serveur');
                 });
             }
         }
 
-        // Function to show notification
         function showNotification(message) {
             const notification = document.getElementById('notification');
-            notification.textContent = message;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    ${message}
+                </div>
+            `;
             notification.classList.add('show');
             
-            // Hide after 3 seconds
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, 4000);
         }
 
-        // Make cards draggable
+        // Drag & Drop functionality
         document.addEventListener('DOMContentLoaded', function() {
             const cards = document.querySelectorAll('.card');
+            const columns = document.querySelectorAll('.column');
             
             cards.forEach(card => {
-                card.setAttribute('draggable', 'true');
-                
                 card.addEventListener('dragstart', function(e) {
                     e.dataTransfer.setData('text/plain', card.dataset.taskId);
                     setTimeout(() => {
@@ -667,13 +735,13 @@
                 });
             });
 
-            const columns = document.querySelectorAll('.column');
-            
             columns.forEach(column => {
                 column.addEventListener('dragover', function(e) {
                     e.preventDefault();
                     const draggingCard = document.querySelector('.dragging');
                     if (draggingCard) {
+                        column.style.background = 'rgba(99, 102, 241, 0.05)';
+                        column.style.borderColor = 'var(--primary-color)';
                         const afterElement = getDragAfterElement(column, e.clientY);
                         if (afterElement) {
                             column.insertBefore(draggingCard, afterElement);
@@ -683,10 +751,21 @@
                     }
                 });
 
+                column.addEventListener('dragleave', function(e) {
+                    if (!column.contains(e.relatedTarget)) {
+                        column.style.background = '';
+                        column.style.borderColor = '';
+                    }
+                });
+
                 column.addEventListener('drop', function(e) {
                     e.preventDefault();
+                    column.style.background = '';
+                    column.style.borderColor = '';
+                    
                     const taskId = e.dataTransfer.getData('text/plain');
                     const card = document.querySelector(`[data-task-id="${taskId}"]`);
+                    
                     if (card) {
                         const afterElement = getDragAfterElement(column, e.clientY);
                         if (afterElement) {
@@ -695,20 +774,47 @@
                             column.appendChild(card);
                         }
                         
-                        // Update status based on the column
+                        // Déterminer le nouveau statut basé sur la colonne
+                        const columnTitle = column.querySelector('.column-title').textContent.trim();
                         let newStatus = 'TO DO';
-                        const columnTitle = column.querySelector('h2').textContent;
-                        let statusName = 'À faire';
+                        let statusDisplayName = 'À faire';
                         
-                        if (columnTitle === 'En cours') {
+                        if (columnTitle.includes('En cours')) {
                             newStatus = 'IN PROGRESS';
-                            statusName = 'En cours';
-                        } else if (columnTitle === 'Terminées') {
+                            statusDisplayName = 'En cours';
+                        } else if (columnTitle.includes('Terminées')) {
                             newStatus = 'DONE';
-                            statusName = 'Terminées';
+                            statusDisplayName = 'Terminées';
+                        } else if (columnTitle.includes('À faire')) {
+                            newStatus = 'TO DO';
+                            statusDisplayName = 'À faire';
                         }
                         
-                        // Send update to server
+                        // Mettre à jour visuellement le badge de statut
+                        const statusBadge = card.querySelector('.status-badge');
+                        
+                        // Supprimer les anciennes classes de statut
+                        statusBadge.classList.remove('status-TO', 'status-TODO', 'status-IN', 'status-INPROGRESS', 'status-DONE');
+                        
+                        // Ajouter la nouvelle classe et mettre à jour le contenu
+                        if (newStatus === 'TO DO') {
+                            statusBadge.classList.add('status-TO');
+                            statusBadge.innerHTML = '<i class="fas fa-clock"></i> À faire';
+                        } else if (newStatus === 'IN PROGRESS') {
+                            statusBadge.classList.add('status-IN');
+                            statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours';
+                        } else if (newStatus === 'DONE') {
+                            statusBadge.classList.add('status-DONE');
+                            statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Terminée';
+                        }
+                        
+                        // Mettre à jour les boutons d'action selon le nouveau statut
+                        updateStatusActions(card, newStatus);
+                        
+                        // Mettre à jour les compteurs de colonnes
+                        updateColumnCounts();
+                        
+                        // Envoyer la mise à jour au serveur
                         fetch(`/tasks/${taskId}/update_status/`, {
                             method: 'POST',
                             headers: {
@@ -726,16 +832,20 @@
                             return response.json();
                         })
                         .then(data => {
-                            if (data.status === 'success') {
-                                showNotification(`Tâche déplacée vers: ${statusName}`);
+                            if (data.status === 'success' || data.success) {
+                                showNotification(`✅ Tâche déplacée vers: ${statusDisplayName}`);
                             } else {
                                 console.error('Server error:', data.message || 'Unknown error');
-                                window.location.reload();
+                                showNotification('❌ Erreur lors de la mise à jour');
+                                // En cas d'erreur, recharger la page
+                                setTimeout(() => window.location.reload(), 2000);
                             }
                         })
                         .catch(error => {
                             console.error('Error updating task status:', error);
-                            window.location.reload();
+                            showNotification('❌ Erreur lors de la mise à jour');
+                            // En cas d'erreur, recharger la page
+                            setTimeout(() => window.location.reload(), 2000);
                         });
                     }
                 });
@@ -755,6 +865,46 @@
                     return closest;
                 }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function updateStatusActions(card, status) {
+            const statusActions = card.querySelector('.status-actions');
+            const taskId = card.dataset.taskId;
+            
+            if (status === 'TO DO') {
+                statusActions.innerHTML = `
+                    <button class="status-btn" onclick="updateStatus(${taskId}, 'IN PROGRESS'); return false;">
+                        <i class="fas fa-play"></i> Commencer
+                    </button>
+                `;
+            } else if (status === 'IN PROGRESS') {
+                statusActions.innerHTML = `
+                    <button class="status-btn" onclick="updateStatus(${taskId}, 'TO DO'); return false;">
+                        <i class="fas fa-arrow-left"></i> À faire
+                    </button>
+                    <button class="status-btn active" onclick="updateStatus(${taskId}, 'DONE'); return false;">
+                        <i class="fas fa-check"></i> Terminer
+                    </button>
+                `;
+            } else if (status === 'DONE') {
+                statusActions.innerHTML = `
+                    <button class="status-btn" onclick="updateStatus(${taskId}, 'IN PROGRESS'); return false;">
+                        <i class="fas fa-undo"></i> Reprendre
+                    </button>
+                `;
+            }
+        }
+
+        function updateColumnCounts() {
+            const columns = document.querySelectorAll('.column');
+            
+            columns.forEach(column => {
+                const cards = column.querySelectorAll('.card').length;
+                const countElement = column.querySelector('.column-count');
+                if (countElement) {
+                    countElement.textContent = cards;
+                }
+            });
         }
     </script>
 </body>
