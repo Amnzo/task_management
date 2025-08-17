@@ -1,4 +1,4 @@
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -326,6 +326,239 @@
             flex-wrap: wrap;
         }
 
+        /* Reassign Dropdown Styles */
+        .reassign-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Modal Styles */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .modal.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        transform: translateY(-20px);
+        transition: transform 0.3s ease;
+    }
+    
+    .modal.show .modal-content {
+        transform: translateY(0);
+    }
+    
+    .close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        background: none;
+        border: none;
+        color: #666;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-primary {
+        background-color: #4f46e5;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #4338ca;
+    }
+    
+    .btn-secondary {
+        background-color: #e5e7eb;
+        color: #4b5563;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #d1d5db;
+    }
+
+    .modal h3 {
+        margin-top: 0;
+        color: #2d3748;
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+    }
+
+    .close {
+        position: absolute;
+        right: 20px;
+        top: 15px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #718096;
+    }
+
+    .close:hover {
+        color: #2d3748;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #4a5568;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+        border-color: #6366f1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 25px;
+        padding-top: 15px;
+        border-top: 1px solid #edf2f7;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background-color: #6366f1;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #4f46e5;
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background-color: #f1f5f9;
+        color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+        background-color: #e2e8f0;
+    }
+
+    .current-assignee {
+        font-weight: 500;
+        color: #4a5568;
+        padding: 8px 0;
+        margin-bottom: 15px;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .reassign-dropdown-content {
+        display: none;
+        position: absolute;
+        background-color: white;
+        min-width: 200px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            z-index: 1000;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .reassign-dropdown-content.show {
+            display: block;
+        }
+
+        .reassign-option {
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reassign-option:hover {
+            background-color: #f5f5f5;
+        }
+
+        .reassign-option i {
+            width: 20px;
+            text-align: center;
+        }
+
         .status-btn {
             background: var(--background-column);
             border: 1px solid var(--border-color);
@@ -500,30 +733,34 @@
                             <div class="card-title">{{ task.description }}</div>
 
                             <div class="card-footer">
-                                <div class="card-meta">
-                                    <div class="meta-left">
-                                        <div class="meta-item" title="Créé par">
-                                            <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
-                                        </div>
-                                        <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
-                                            <i class="fas fa-flag"></i> {{ task.get_priority_display }}
-                                        </div>
-                                        <div class="meta-item" title="Assigné à">
-                                            <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
-                                        </div>
-
-                                         <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier la tâche">
+                                <div class="card-actions">
+                                    <div class="meta-item" title="Créé par">
+                                        <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                                    </div>
+                                    <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                        <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                                    </div>
+                                    <div class="meta-item assigned-to" title="Assigné à">
+                                        <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                                    </div>
+                                    <button class="btn btn-edit" data-task-id="{{ task.id }}" title="Modifier la tâche">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
-                                    <button class="btn btn-reassign" onclick="reassignTask({{ task.id }})" title="Réassigner la tâche">
+                                    <button class="btn btn-reassign"
+                                            data-task-id="{{ task.id }}"
+                                            data-assigned-id="{{ task.assigned_to.id|default:'' }}"
+                                            data-assigned-name="{{ task.assigned_to.nom|default:'Non assigné'|escapejs }}"
+                                            title="Réassigner la tâche">
                                         <i class="fas fa-user-plus"></i>
                                     </button>
-                                    </div>
                                 </div>
-
                             </div>
 
-
+                            <div class="status-actions">
+                                <button class="status-btn" onclick="updateStatus({{ task.id }}, 'IN PROGRESS'); return false;">
+                                    <i class="fas fa-play"></i> Commencer
+                                </button>
+                            </div>
                         </div>
                     {% empty %}
                         <div class="empty-state">
@@ -547,34 +784,32 @@
                 <div class="column-content">
                     {% for task in inprogress %}
                         <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
-                            <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                {{ task.get_status_display }}
-                            </span>
+
                             <div class="card-title">{{ task.description }}</div>
 
                             <div class="card-footer">
-                                <div class="card-meta">
-                                    <div class="meta-left">
-                                        <div class="meta-item" title="Créé par">
+
+                                <div class="card-actions">
+                                    <div class="meta-item" title="Créé par">
                                             <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
                                         </div>
                                         <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
                                             <i class="fas fa-flag"></i> {{ task.get_priority_display }}
                                         </div>
-                                        <div class="meta-item" title="Assigné à">
+                                        <div class="meta-item assigned-to" title="Assigné à">
                                             <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
                                         </div>
-
-                                        <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier la tâche">
+                                    <button class="btn btn-edit" data-task-id="{{ task.id }}" title="Modifier la tâche">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
-                                    <button class="btn btn-reassign" onclick="reassignTask({{ task.id }})" title="Réassigner la tâche">
+                                    <button class="btn btn-reassign"
+                                            data-task-id="{{ task.id }}"
+                                            data-assigned-id="{{ task.assigned_to.id|default:'' }}"
+                                            data-assigned-name="{{ task.assigned_to.nom|default:'Non assigné'|escapejs }}"
+                                            title="Réassigner la tâche">
                                         <i class="fas fa-user-plus"></i>
                                     </button>
-                                    </div>
                                 </div>
-
                             </div>
 
 
@@ -601,39 +836,36 @@
                 <div class="column-content">
                     {% for task in done %}
                         <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
-                            <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">
-                                <i class="fas fa-check-circle"></i>
-                                {{ task.get_status_display }}
-                            </span>
+
                             <div class="card-title">{{ task.description }}</div>
 
                             <div class="card-footer">
-                                <div class="card-meta">
-                                    <div class="meta-left">
-                                        <div class="meta-item" title="Créé par">
+
+                                <div class="card-actions">
+                                     <div class="meta-item" title="Créé par">
                                             <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
                                         </div>
                                         <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
                                             <i class="fas fa-flag"></i> {{ task.get_priority_display }}
                                         </div>
-                                        <div class="meta-item" title="Assigné à">
+                                        <div class="meta-item assigned-to" title="Assigné à">
                                             <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
                                         </div>
-
-                                         <button class="btn btn-edit" onclick="editTask({{ task.id }})" title="Modifier la tâche">
+                                    <button class="btn btn-edit" data-task-id="{{ task.id }}" title="Modifier la tâche">
                                         <i class="fas fa-pencil-alt"></i>
-                                        </button>
-                                        <button class="btn btn-reassign" onclick="reassignTask({{ task.id }})" title="Réassigner la tâche">
-                                            <i class="fas fa-user-plus"></i>
-                                        </button>
-
-
-                                    </div>
+                                    </button>
+                                    <button class="btn btn-reassign"
+                                            data-task-id="{{ task.id }}"
+                                            data-assigned-id="{{ task.assigned_to.id|default:'' }}"
+                                            data-assigned-name="{{ task.assigned_to.nom|default:'Non assigné'|escapejs }}"
+                                            title="Réassigner la tâche">
+                                        <i class="fas fa-user-plus"></i>
+                                    </button>
                                 </div>
-
                             </div>
 
 
+                        </div>
                     {% empty %}
                         <div class="empty-state">
                             <i class="fas fa-inbox"></i>
@@ -645,267 +877,244 @@
         </div>
     </div>
 
+       
+    <!-- Reassignment Modal -->
+    <div id="reassignTaskModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Réassigner la tâche</h3>
+            
+            <div class="form-group">
+                <label>Actuellement assigné à :</label>
+                <div class="current-assignee" id="current-assignee-display" style="padding: 0.5rem; background: #f3f4f6; border-radius: 4px;">Chargement...</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="user-select">Nouvel assigné :</label>
+                <select id="user-select" class="form-control">
+                    <option value="">-- Sélectionner un utilisateur --</option>
+                    {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary close">Annuler</button>
+                <button type="button" id="save-reassignment" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div id="editTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Modifier la tâche</h3>
+            <form id="edit-task-form">
+                <input type="hidden" id="edit-task-id" name="task_id">
+
+                <div class="form-group">
+                    <label for="edit-description">Description :</label>
+                    <textarea id="edit-description" name="description" class="form-control" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-priority">Priorité :</label>
+                    <select id="edit-priority" name="priority" class="form-control" required>
+                        <option value="LOW">Basse (L)</option>
+                        <option value="MEDIUM">Moyenne (M)</option>
+                        <option value="HIGH">Haute (H)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-assigned-to">Assigné à :</label>
+                    <select id="edit-assigned-to" name="assigned_to" class="form-control">
+                        <option value="">-- Non assigné --</option>
+                        {% for user in active_users %}
+                            <option value="{{ user.id }}">{{ user.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-status">Statut :</label>
+                    <select id="edit-status" name="status" class="form-control" required>
+                        <option value="TO DO">À faire</option>
+                        <option value="IN PROGRESS">En cours</option>
+                        <option value="DONE">Terminée</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary close">Annuler</button>
+                </div>
+            </form>
+        </div>
+
     <script>
-        function updateStatus(taskId, newStatus) {
-            fetch(`/tasks/${taskId}/update_status/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFTOKEN': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    status: newStatus
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification('✅ Statut mis à jour avec succès');
-                    window.location.reload();
+        // Gestion des modales
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM chargé, initialisation des écouteurs d\'événements');
+            // Variables globales pour la réassignation
+            let currentTaskId = null;
+            let currentAssignedId = null;
+            
+            // Gestion de l'ouverture de la modale de réassignation
+            document.addEventListener('click', function(e) {
+                // Vérifier si le clic est sur un bouton de réassignation ou un de ses enfants
+                const btnReassign = e.target.closest('.btn-reassign');
+                if (!btnReassign) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const taskId = btnReassign.getAttribute('data-task-id');
+                const assignedId = btnReassign.getAttribute('data-assigned-id');
+                const assignedName = btnReassign.getAttribute('data-assigned-name');
+                
+                console.log('Clic sur le bouton de réassignation:', { taskId, assignedId, assignedName });
+                
+                // Stocker les informations de la tâche
+                currentTaskId = taskId;
+                currentAssignedId = assignedId;
+                
+                // Mettre à jour l'affichage
+                const currentAssigneeDisplay = document.getElementById('current-assignee-display');
+                if (currentAssigneeDisplay) {
+                    currentAssigneeDisplay.textContent = assignedName || 'Non assigné';
                 } else {
-                    showNotification('❌ Erreur lors de la mise à jour du statut');
+                    console.error('Élément current-assignee-display non trouvé');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('❌ Erreur lors de la communication avec le serveur');
+                
+                // Réinitialiser la sélection
+                const userSelect = document.getElementById('user-select');
+                if (userSelect) {
+                    userSelect.value = assignedId || '';
+                } else {
+                    console.error('Élément user-select non trouvé');
+                }
+                
+                // Ouvrir la modale
+                const modal = document.getElementById('reassignTaskModal');
+                if (modal) {
+                    console.log('Ouverture de la modale');
+                    
+                    // Afficher la modale d'abord
+                    modal.style.display = 'flex';
+                    
+                    // Forcer le rendu du navigateur
+                    void modal.offsetWidth;
+                    
+                    // Ajouter la classe show pour l'animation
+                    setTimeout(() => {
+                        modal.classList.add('show');
+                    }, 10);
+                    
+                    // Empêcher le défilement de la page
+                    document.body.style.overflow = 'hidden';
+                    
+                    // Afficher le contenu de la modale pour le débogage
+                    console.log('Contenu de la modale:', modal.outerHTML);
+                } else {
+                    console.error('Modale non trouvée');
+                }
             });
-        }
-
-        function editTask(taskId) {
-            showNotification(`Mode édition pour la tâche #${taskId}`);
-            // Vous pouvez ouvrir un modal ou rediriger vers une page d'édition
-            // window.location.href = `/tasks/${taskId}/edit/`;
-        }
-
-        function deleteTask(taskId) {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
-                fetch(`/tasks/${taskId}/delete/`, {
+            
+            // Gestion de la soumission du formulaire de réassignation
+            document.getElementById('save-reassignment').addEventListener('click', function() {
+                const userSelect = document.getElementById('user-select');
+                const newAssignedId = userSelect.value;
+                
+                if (!currentTaskId) return;
+                
+                // Envoyer la requête AJAX pour mettre à jour l'assignation
+                fetch(`/tasks/${currentTaskId}/reassign/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFTOKEN': '{{ csrf_token }}'
-                    }
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        user_id: newAssignedId || null
+                    })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        showNotification('✅ Tâche supprimée avec succès');
+                    if (data.status === 'success') {
+                        // Mettre à jour l'interface utilisateur
+                        const assignedName = data.assigned_to || 'Non assigné';
+                            
+                        // Mettre à jour le bouton de réassignation
+                        const reassignButton = document.querySelector(`.btn-reassign[data-task-id="${currentTaskId}"]`);
+                        if (reassignButton) {
+                            reassignButton.setAttribute('data-assigned-id', newAssignedId || '');
+                            reassignButton.setAttribute('data-assigned-name', assignedName);
+                            reassignButton.setAttribute('title', `Assigné à: ${assignedName}`);
+                        }
+                        
+                        // Fermer la modale
+                        document.getElementById('reassignTaskModal').style.display = 'none';
+                        document.body.style.overflow = 'auto'; // Rétablir le défilement de la page
+                        
+                        // Afficher un message de succès
+                        alert('Tâche réassignée avec succès!');
+                        
+                        // Recharger la page pour mettre à jour les données
                         window.location.reload();
                     } else {
-                        showNotification('❌ Erreur lors de la suppression de la tâche');
+                        alert('Erreur lors de la réassignation: ' + (data.message || 'Erreur inconnue'));
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('❌ Erreur lors de la communication avec le serveur');
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de la réassignation');
                 });
-            }
-        }
-
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            notification.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    ${message}
-                </div>
-            `;
-            notification.classList.add('show');
+            });
             
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
-        }
-
-        // Drag & Drop functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.card');
-            const columns = document.querySelectorAll('.column');
+            // Gestion de la fermeture des modales
+            document.querySelectorAll('.modal .close, .modal .btn-secondary').forEach(button => {
+                button.addEventListener('click', function() {
+                    const modal = this.closest('.modal');
+                    if (modal) {
+                        modal.classList.remove('show');
+                        setTimeout(() => {
+                            modal.style.display = 'none';
+                        }, 300); // Attendre la fin de l'animation
+                        document.body.style.overflow = 'auto'; // Rétablir le défilement de la page
+                    }
+                });
+            });
             
-            cards.forEach(card => {
-                card.addEventListener('dragstart', function(e) {
-                    e.dataTransfer.setData('text/plain', card.dataset.taskId);
+            // Fermer la modale en cliquant en dehors
+            window.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.target.classList.remove('show');
                     setTimeout(() => {
-                        card.classList.add('dragging');
-                    }, 0);
-                });
-                
-                card.addEventListener('dragend', function() {
-                    card.classList.remove('dragging');
-                });
-            });
-
-            columns.forEach(column => {
-                column.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    const draggingCard = document.querySelector('.dragging');
-                    if (draggingCard) {
-                        column.style.background = 'rgba(99, 102, 241, 0.05)';
-                        column.style.borderColor = 'var(--primary-color)';
-                        const afterElement = getDragAfterElement(column, e.clientY);
-                        if (afterElement) {
-                            column.insertBefore(draggingCard, afterElement);
-                        } else {
-                            column.appendChild(draggingCard);
-                        }
-                    }
-                });
-
-                column.addEventListener('dragleave', function(e) {
-                    if (!column.contains(e.relatedTarget)) {
-                        column.style.background = '';
-                        column.style.borderColor = '';
-                    }
-                });
-
-                column.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    column.style.background = '';
-                    column.style.borderColor = '';
-                    
-                    const taskId = e.dataTransfer.getData('text/plain');
-                    const card = document.querySelector(`[data-task-id="${taskId}"]`);
-                    
-                    if (card) {
-                        const afterElement = getDragAfterElement(column, e.clientY);
-                        if (afterElement) {
-                            column.insertBefore(card, afterElement);
-                        } else {
-                            column.appendChild(card);
-                        }
-                        
-                        // Déterminer le nouveau statut basé sur la colonne
-                        const columnTitle = column.querySelector('.column-title').textContent.trim();
-                        let newStatus = 'TO DO';
-                        let statusDisplayName = 'À faire';
-                        
-                        if (columnTitle.includes('En cours')) {
-                            newStatus = 'IN PROGRESS';
-                            statusDisplayName = 'En cours';
-                        } else if (columnTitle.includes('Terminées')) {
-                            newStatus = 'DONE';
-                            statusDisplayName = 'Terminées';
-                        } else if (columnTitle.includes('À faire')) {
-                            newStatus = 'TO DO';
-                            statusDisplayName = 'À faire';
-                        }
-                        
-                        // Mettre à jour visuellement le badge de statut
-                        const statusBadge = card.querySelector('.status-badge');
-                        
-                        // Supprimer les anciennes classes de statut
-                        statusBadge.classList.remove('status-TO', 'status-TODO', 'status-IN', 'status-INPROGRESS', 'status-DONE');
-                        
-                        // Ajouter la nouvelle classe et mettre à jour le contenu
-                        if (newStatus === 'TO DO') {
-                            statusBadge.classList.add('status-TO');
-                            statusBadge.innerHTML = '<i class="fas fa-clock"></i> À faire';
-                        } else if (newStatus === 'IN PROGRESS') {
-                            statusBadge.classList.add('status-IN');
-                            statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours';
-                        } else if (newStatus === 'DONE') {
-                            statusBadge.classList.add('status-DONE');
-                            statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Terminée';
-                        }
-                        
-                        // Mettre à jour les boutons d'action selon le nouveau statut
-                        updateStatusActions(card, newStatus);
-                        
-                        // Mettre à jour les compteurs de colonnes
-                        updateColumnCounts();
-                        
-                        // Envoyer la mise à jour au serveur
-                        fetch(`/tasks/${taskId}/update_status/`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFTOKEN': '{{ csrf_token }}'
-                            },
-                            body: JSON.stringify({
-                                status: newStatus
-                            })
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Network response was not ok');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.status === 'success' || data.success) {
-                                showNotification(`✅ Tâche déplacée vers: ${statusDisplayName}`);
-                            } else {
-                                console.error('Server error:', data.message || 'Unknown error');
-                                showNotification('❌ Erreur lors de la mise à jour');
-                                // En cas d'erreur, recharger la page
-                                setTimeout(() => window.location.reload(), 2000);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error updating task status:', error);
-                            showNotification('❌ Erreur lors de la mise à jour');
-                            // En cas d'erreur, recharger la page
-                            setTimeout(() => window.location.reload(), 2000);
-                        });
-                    }
-                });
-            });
-        });
-
-        function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
-            
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect();
-                const offset = y - box.top - box.height / 2;
-                
-                if (offset < 0 && offset > closest.offset) {
-                    return { offset: offset, element: child };
-                } else {
-                    return closest;
+                        event.target.style.display = 'none';
+                    }, 300); // Attendre la fin de l'animation
+                    document.body.style.overflow = 'auto'; // Rétablir le défilement de la page
                 }
-            }, { offset: Number.NEGATIVE_INFINITY }).element;
-        }
-
-        function updateStatusActions(card, status) {
-            const statusActions = card.querySelector('.status-actions');
-            const taskId = card.dataset.taskId;
+            });
             
-            if (status === 'TO DO') {
-                statusActions.innerHTML = `
-                    <button class="status-btn" onclick="updateStatus(${taskId}, 'IN PROGRESS'); return false;">
-                        <i class="fas fa-play"></i> Commencer
-                    </button>
-                `;
-            } else if (status === 'IN PROGRESS') {
-                statusActions.innerHTML = `
-                    <button class="status-btn" onclick="updateStatus(${taskId}, 'TO DO'); return false;">
-                        <i class="fas fa-arrow-left"></i> À faire
-                    </button>
-                    <button class="status-btn active" onclick="updateStatus(${taskId}, 'DONE'); return false;">
-                        <i class="fas fa-check"></i> Terminer
-                    </button>
-                `;
-            } else if (status === 'DONE') {
-                statusActions.innerHTML = `
-                    <button class="status-btn" onclick="updateStatus(${taskId}, 'IN PROGRESS'); return false;">
-                        <i class="fas fa-undo"></i> Reprendre
-                    </button>
-                `;
+            // Fonction utilitaire pour récupérer le token CSRF
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
             }
-        }
-
-        function updateColumnCounts() {
-            const columns = document.querySelectorAll('.column');
-            
-            columns.forEach(column => {
-                const cards = column.querySelectorAll('.card').length;
-                const countElement = column.querySelector('.column-count');
-                if (countElement) {
-                    countElement.textContent = cards;
-                }
-            });
-        }
+        });
     </script>
 </body>
 </html>
