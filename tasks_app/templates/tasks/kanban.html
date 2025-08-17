@@ -9,6 +9,53 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        .filter-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 200px;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+        
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #1e293b;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            margin-right: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+        
+        .btn-secondary i {
+            font-size: 12px;
+        }
+        
         :root {
             --primary-color: #6366f1;
             --primary-dark: #4f46e5;
@@ -700,10 +747,22 @@
             Gestion des tâches
         </h1>
         <div class="header-actions">
-            <button class="btn-primary">
+            <div class="filter-container" style="margin-right: 15px;">
+                <select id="user-filter" class="filter-select">
+                    <option value="">Tous les utilisateurs</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <a href="{% url 'user_create' %}" class="btn-primary">
+                <i class="fas fa-user-plus"></i>
+                Nouvel utilisateur
+            </a>
+            <a href="{% url 'task_create' %}" class="btn-primary">
                 <i class="fas fa-plus"></i>
                 Nouvelle tâche
-            </button>
+            </a>
         </div>
     </div>
 
@@ -725,13 +784,9 @@
 
                 <div class="column-content">
                     {% for task in todo %}
-                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
-                            <span class="status-badge status-{{ task.status|upper|cut:' '|cut:'-' }}">
-                                <i class="fas fa-clock"></i>
-                                {{ task.get_status_display }}
-                            </span>
+                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}">
+                            
                             <div class="card-title">{{ task.description }}</div>
-
                             <div class="card-footer">
                                 <div class="card-actions">
                                     <div class="meta-item" title="Créé par">
@@ -756,11 +811,6 @@
                                 </div>
                             </div>
 
-                            <div class="status-actions">
-                                <button class="status-btn" onclick="updateStatus({{ task.id }}, 'IN PROGRESS'); return false;">
-                                    <i class="fas fa-play"></i> Commencer
-                                </button>
-                            </div>
                         </div>
                     {% empty %}
                         <div class="empty-state">
@@ -783,7 +833,7 @@
 
                 <div class="column-content">
                     {% for task in inprogress %}
-                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
+                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}">
 
                             <div class="card-title">{{ task.description }}</div>
 
@@ -835,7 +885,7 @@
 
                 <div class="column-content">
                     {% for task in done %}
-                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}">
+                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}">
 
                             <div class="card-title">{{ task.description }}</div>
 
@@ -949,6 +999,41 @@
         </div>
 
     <script>
+        // Gestion du filtre par utilisateur
+        document.getElementById('user-filter').addEventListener('change', function() {
+            const userId = this.value;
+            const cards = document.querySelectorAll('.card');
+            const noTasksMessage = document.getElementById('no-tasks-message');
+            let hasVisibleTasks = false;
+            
+            cards.forEach(card => {
+                const cardUserId = card.getAttribute('data-user-id');
+                if (!userId || cardUserId === userId) {
+                    card.style.display = 'block';
+                    hasVisibleTasks = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Afficher un message si aucune tâche n'est visible
+            if (!hasVisibleTasks && userId) {
+                if (!noTasksMessage) {
+                    const message = document.createElement('div');
+                    message.id = 'no-tasks-message';
+                    message.textContent = 'Aucune tâche trouvée pour cet utilisateur';
+                    message.style.textAlign = 'center';
+                    message.style.padding = '20px';
+                    message.style.color = '#666';
+                    document.querySelector('.kanban').appendChild(message);
+                } else {
+                    noTasksMessage.style.display = 'block';
+                }
+            } else if (noTasksMessage) {
+                noTasksMessage.style.display = 'none';
+            }
+        });
+        
         // Gestion des modales
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM chargé, initialisation des écouteurs d\'événements');

@@ -9,7 +9,9 @@ from django.core import serializers
 import json
 
 from .models import Task, Personne
+from .forms import PersonneForm, TaskForm
 from django.forms.models import model_to_dict
+from django.contrib import messages
 
 
 def task_kanban(request):
@@ -94,40 +96,86 @@ def get_users_json(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_task(request, task_id):
-    try:
-        print(f"Début de la mise à jour de la tâche {task_id}")
-        task = get_object_or_404(Task, id=task_id)
-        data = json.loads(request.body)
-        print(f"Données reçues: {data}")
-        print(f"Headers: {request.headers}")
-        
-        # Mise à jour des champs de la tâche
-        if 'description' in data:
-            task.description = data['description']
-        if 'status' in data:
-            task.status = data['status']
-        if 'priority' in data:
-            task.priority = data['priority']
-        if 'assigned_to' in data:
-            if data['assigned_to']:
-                task.assigned_to = get_object_or_404(Personne, id=data['assigned_to'])
-            else:
-                task.assigned_to = None
-        
-        task.save()
-        
-        # Retourner la tâche mise à jour
-        task_data = model_to_dict(task)
-        if task.assigned_to:
-            task_data['assigned_to'] = {'id': task.assigned_to.id, 'name': task.assigned_to.nom}
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Tâche mise à jour avec succès',
-            'task': task_data
-        })
-        
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'error', 'message': 'Données JSON invalides'}, status=400)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    task = get_object_or_404(Task, pk=task_id)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            task.description = data.get('description', task.description)
+            task.priority = data.get('priority', task.priority)
+            task.status = data.get('status', task.status)
+            
+            # Mettre à jour la personne assignée si fournie
+            assigned_to_id = data.get('assigned_to')
+            if assigned_to_id is not None:
+                try:
+                    assigned_to = Personne.objects.get(id=assigned_to_id)
+                    task.assigned_to = assigned_to
+                except Personne.DoesNotExist:
+                    return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=400)
+            
+            task.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Tâche mise à jour avec succès',
+                'task': {
+                    'id': task.id,
+                    'description': task.description,
+                    'priority': task.priority,
+                    'status': task.status,
+                    'assigned_to': task.assigned_to.get_full_name() if task.assigned_to else 'Non assigné',
+                    'assigned_to_id': task.assigned_to.id if task.assigned_to else None,
+                }
+            })
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Données JSON invalides'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
+
+
+def user_create(request):
+    if request.method == 'POST':
+        form = PersonneForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Utilisateur créé avec succès')
+            return redirect('task_kanban')
+    else:
+        form = PersonneForm()
+    
+    return render(request, 'tasks/user_form.html', {
+        'form': form,
+        'title': 'Nouvel utilisateur'
+    })
+
+
+def task_create(request):
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            # Récupérer ou créer une instance Personne correspondant à l'utilisateur connecté
+            # Ici, on suppose que le nom d'utilisateur correspond au champ 'nom' dans Personne
+            # Vous devrez peut-être adapter cette logique selon votre modèle d'authentification
+            username = request.user.username
+            personne, created = Personne.objects.get_or_create(
+                nom=username,
+                defaults={
+                    'code': username.upper(),
+                    'actif': True,
+                    'niveau': 'user-simple'
+                }
+            )
+            task.created_by = personne
+            task.save()
+            messages.success(request, 'Tâche créée avec succès')
+            return redirect('task_kanban')
+    else:
+        form = TaskForm()
+    
+    return render(request, 'tasks/task_form.html', {
+        'form': form,
+        'title': 'Nouvelle tâche'
+    })
