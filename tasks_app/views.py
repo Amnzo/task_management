@@ -14,8 +14,18 @@ from django.forms.models import model_to_dict
 from django.contrib import messages
 
 
+from django.db.models import Case, When, Value, IntegerField
+
 def task_kanban(request):
-    tasks = Task.objects.filter(archived=False)
+    tasks = Task.objects.filter(archived=False).annotate(
+        priority_order=Case(
+            When(priority='HIGH', then=Value(1)),
+            When(priority='MEDIUM', then=Value(2)),
+            When(priority='LOW', then=Value(3)),
+            output_field=IntegerField(),
+        )
+    ).order_by('priority_order', '-created_at')  # d’abord priorité, ensuite date desc
+
     users = Personne.objects.filter(actif=True)
 
     context = {
@@ -25,7 +35,6 @@ def task_kanban(request):
         'users': users,
     }
     return render(request, 'tasks/kanban.html', context)
-
 
 @csrf_exempt
 @require_http_methods(["POST"])
