@@ -119,13 +119,16 @@ def update_task(request, task_id):
             task.status = data.get('status', task.status)
             
             # Mettre à jour la personne assignée si fournie
-            assigned_to_id = data.get('assigned_to')
-            if assigned_to_id is not None:
-                try:
-                    assigned_to = Personne.objects.get(id=assigned_to_id)
-                    task.assigned_to = assigned_to
-                except Personne.DoesNotExist:
-                    return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=400)
+            if 'assigned_to' in data:
+                assigned_to_id = data.get('assigned_to')
+                if assigned_to_id is not None and assigned_to_id != '':
+                    try:
+                        assigned_to = Personne.objects.get(id=assigned_to_id)
+                        task.assigned_to = assigned_to
+                    except Personne.DoesNotExist:
+                        return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=400)
+                else:
+                    task.assigned_to = None
             
             task.save()
             return JsonResponse({
@@ -136,7 +139,7 @@ def update_task(request, task_id):
                     'description': task.description,
                     'priority': task.priority,
                     'status': task.status,
-                    'assigned_to': task.assigned_to.get_full_name() if task.assigned_to else 'Non assigné',
+                    'assigned_to': task.assigned_to.nom if task.assigned_to else 'Non assigné',
                     'assigned_to_id': task.assigned_to.id if task.assigned_to else None,
                 }
             })
