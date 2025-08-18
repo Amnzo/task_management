@@ -820,14 +820,8 @@
             </div>
         </div>
         <div class="header-actions">
-            <a href="{% url 'user_task_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Nouvelle tâche
-            </a>
-            <a href="{% url 'logout' %}" class="btn btn-secondary">
-                <i class="fas fa-sign-out-alt"></i> Déconnexion
-            </a>
-        </div>   
-           <div class="filter-container" style="display:none;">
+           
+            <div class="filter-container" style="display: none;">
                 <select id="user-filter" class="filter-select">
                     <option value="">Tous les utilisateurs</option>
                     {% for user in users %}
@@ -835,8 +829,10 @@
                     {% endfor %}
                 </select>
             </div>
-           
             
+            <a href="{% url 'user_task_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle tâche
+            </a>
             <a href="{% url 'logout' %}" class="btn btn-secondary">
                 <i class="fas fa-sign-out-alt"></i> Déconnexion
             </a>
@@ -977,7 +973,7 @@
                                     <button class="btn btn-edit" data-task-id="{{ task.id }}" title="Modifier la tâche">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
-                                    
+                                   
                                 </div>
                             </div>
 
@@ -999,7 +995,7 @@
                     <div class="column-title">
                         <i class="fas fa-circle-check" style="color: #059669;"></i>
                         Terminées
-                        
+                       
                     </div>
                     <div class="column-count">{{ done|length }}</div>
                 </div>
@@ -1026,7 +1022,13 @@
                                     <button class="btn btn-edit" data-task-id="{{ task.id }}" title="Modifier la tâche">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
-                                    
+                                    <button class="btn btn-reassign"
+                                            data-task-id="{{ task.id }}"
+                                            data-assigned-id="{{ task.assigned_to.id|default:'' }}"
+                                            data-assigned-name="{{ task.assigned_to.nom|default:'Non assigné'|escapejs }}"
+                                            title="Réassigner la tâche">
+                                        <i class="fas fa-user-plus"></i>
+                                    </button>
                                 </div>
                             </div>
 
@@ -1778,105 +1780,3 @@
     </style>
 </body>
 </html>
-
-<!-- Modal Nouvelle Tâche -->
-<div id="newTaskModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h3><i class="fas fa-plus"></i> Nouvelle Tâche</h3>
-        
-        <form id="newTaskForm" method="post" action="{% url 'task_create' %}">
-            {% csrf_token %}
-            <input type="hidden" name="assigned_to" value="{{ current_user.id }}">
-            
-            <div class="form-group">
-                <label for="description">Description <span style="color: #ef4444;">*</span></label>
-                <input type="text" id="description" name="description" required class="form-control" placeholder="Décrivez la tâche">
-            </div>
-            
-            <div class="form-group">
-                <label for="priority">Priorité <span style="color: #ef4444;">*</span></label>
-                <select id="priority" name="priority" required class="form-control">
-                    <option value="">Sélectionnez une priorité</option>
-                    <option value="LOW">Basse</option>
-                    <option value="MEDIUM">Moyenne</option>
-                    <option value="HIGH">Haute</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="due_date">Date d'échéance</label>
-                <input type="date" id="due_date" name="due_date" class="form-control">
-            </div>
-            
-            <div class="form-group">
-                <label for="notes">Notes supplémentaires</label>
-                <textarea id="notes" name="notes" rows="3" class="form-control" placeholder="Ajoutez des détails supplémentaires..."></textarea>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary close">Annuler</button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Créer la tâche
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-    // Gestion de l'affichage de la modale
-    document.getElementById('new-task-btn').addEventListener('click', function() {
-        const modal = document.getElementById('newTaskModal');
-        modal.style.display = 'flex';
-        setTimeout(() => {
-            modal.classList.add('show');
-        }, 10);
-        document.body.style.overflow = 'hidden';
-    });
-    
-    // Gestion de la fermeture de la modale
-    document.querySelectorAll('.modal .close, .btn-secondary.close').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const modal = this.closest('.modal');
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }, 300);
-        });
-    });
-    
-    // Fermer la modale en cliquant en dehors
-    window.addEventListener('click', function(event) {
-        if (event.target.classList.contains('modal')) {
-            event.target.classList.remove('show');
-            setTimeout(() => {
-                event.target.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }, 300);
-        }
-    });
-    
-    // Validation du formulaire
-    document.getElementById('newTaskForm').addEventListener('submit', function(e) {
-        const description = document.getElementById('description');
-        const priority = document.getElementById('priority');
-        
-        if (!description.value.trim()) {
-            e.preventDefault();
-            alert('Veuillez saisir une description pour la tâche');
-            description.focus();
-            return false;
-        }
-        
-        if (!priority.value) {
-            e.preventDefault();
-            alert('Veuillez sélectionner une priorité');
-            priority.focus();
-            return false;
-        }
-        
-        return true;
-    });
-</script>

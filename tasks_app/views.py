@@ -21,14 +21,15 @@ def task_kanban(request):
     try:
         current_user = Personne.objects.get(id=request.session['user_id'])
     except Personne.DoesNotExist:
-        # Si l'utilisateur n'existe plus, déconnecter et rediriger vers la page de connexion
-        if 'user_id' in request.session:
-            del request.session['user_id']
-        if 'username' in request.session:
-            del request.session['username']
+        # Si l'utilisateur n'existe plus, déconnecter et rediriger
+        request.session.flush()
         return redirect('login')
-    
-    # Récupérer les tâches
+
+    # Vérifier si ce n'est pas un admin
+    if current_user.niveau != 'ADMIN':
+        return redirect('user_kanban')  # <-- redirige vers vos tâches
+
+    # Récupérer les tâches (pour admin)
     tasks = Task.objects.filter(archived=False).annotate(
         priority_order=Case(
             When(priority='HIGH', then=Value(1)),
@@ -48,7 +49,6 @@ def task_kanban(request):
         'current_user': current_user,
     }
     return render(request, 'tasks/kanban.html', context)
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_task_status(request, task_id):
