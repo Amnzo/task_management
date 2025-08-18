@@ -812,7 +812,7 @@
     <div class="kanban-container">
         <div class="kanban">
             <!-- À FAIRE -->
-            <div class="column">
+            <div class="column" data-status="TO DO">
                 <div class="column-header">
                     <div class="column-title">
                         <i class="fas fa-circle-pause" style="color: #ea580c;"></i>
@@ -822,8 +822,9 @@
                 </div>
 
                 <div class="column-content">
-                    {% for task in todo %}
-                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}">
+                    <div class="card-container">
+                        {% for task in todo %}
+                        <div class="card" data-task-id="{{ task.id }}" draggable="true">
                             
                             <div class="card-title">{{ task.description }}</div>
                             <div class="card-footer">
@@ -851,17 +852,18 @@
                             </div>
 
                         </div>
-                    {% empty %}
+                        {% empty %}
                         <div class="empty-state">
                             <i class="far fa-check-circle"></i>
                             <p>Aucune tâche à faire</p>
                         </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
             <!-- EN COURS -->
-            <div class="column">
+            <div class="column" data-status="IN PROGRESS">
                 <div class="column-header">
                     <div class="column-title">
                         <i class="fas fa-circle-play" style="color: #2563eb;"></i>
@@ -871,8 +873,9 @@
                 </div>
 
                 <div class="column-content">
-                    {% for task in inprogress %}
-                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}">
+                    <div class="card-container">
+                        {% for task in inprogress %}
+                        <div class="card" data-task-id="{{ task.id }}" draggable="true">
 
                             <div class="card-title">{{ task.description }}</div>
 
@@ -903,17 +906,18 @@
 
 
                         </div>
-                    {% empty %}
+                        {% empty %}
                         <div class="empty-state">
                             <i class="fas fa-tasks"></i>
                             <p>Aucune tâche en cours</p>
                         </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
             <!-- TERMINÉES -->
-            <div class="column">
+            <div class="column" data-status="DONE">
                 <div class="column-header">
                     <div class="column-title">
                         <i class="fas fa-circle-check" style="color: #059669;"></i>
@@ -926,8 +930,9 @@
                 </div>
 
                 <div class="column-content">
-                    {% for task in done %}
-                        <div class="card priority-{{ task.priority|lower }}" draggable="true" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}">
+                    <div class="card-container">
+                        {% for task in done %}
+                        <div class="card" data-task-id="{{ task.id }}" draggable="true">
 
                             <div class="card-title">{{ task.description }}</div>
 
@@ -1041,6 +1046,43 @@
         </div>
 
     <script>
+        // Fonction pour récupérer le token CSRF
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Show success message function
+        function showSuccessMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'success-message';
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            // Add animation class
+            setTimeout(() => {
+                messageDiv.classList.add('show');
+            }, 10);
+            
+            // Remove message after 3 seconds
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 300);
+            }, 3000);
+        }
+
         // Gestion du filtre par utilisateur
         document.getElementById('user-filter').addEventListener('change', function() {
             const userId = this.value;
@@ -1222,21 +1264,7 @@
                 }
             });
             
-            // Fonction pour récupérer le token CSRF
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
+            // La fonction getCookie a été déplacée en haut du fichier
             
             // Gestion de l'archivage de toutes les tâches terminées
             document.getElementById('archive-all-btn').addEventListener('click', function() {
@@ -1425,6 +1453,229 @@
                 });
             }
         });
+
+        // Initialize drag and drop functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing drag and drop...');
+            
+            // Function to make cards draggable
+            function makeCardsDraggable() {
+                const cards = document.querySelectorAll('.card');
+                console.log(`Found ${cards.length} cards to make draggable`);
+                
+                cards.forEach(card => {
+                    card.setAttribute('draggable', 'true');
+                    
+                    // Remove any existing event listeners to prevent duplicates
+                    card.removeEventListener('dragstart', handleDragStart);
+                    card.removeEventListener('dragend', handleDragEnd);
+                    
+                    // Add new event listeners
+                    card.addEventListener('dragstart', handleDragStart);
+                    card.addEventListener('dragend', handleDragEnd);
+                });
+            }
+            
+            // Drag start handler
+            function handleDragStart(e) {
+                console.log('Drag started on card:', this.dataset.taskId);
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.dataset.taskId);
+                
+                // Add a small delay to make the drag image work better
+                setTimeout(() => {
+                    this.style.opacity = '0.4';
+                }, 0);
+            }
+            
+            // Drag end handler
+            function handleDragEnd() {
+                console.log('Drag ended');
+                this.classList.remove('dragging');
+                this.style.opacity = '1';
+            }
+            
+            // Make columns droppable
+            function makeColumnsDroppable() {
+                const columns = document.querySelectorAll('.column');
+                console.log(`Found ${columns.length} columns to make droppable`);
+                
+                columns.forEach(column => {
+                    // Remove any existing event listeners to prevent duplicates
+                    column.removeEventListener('dragover', handleDragOver);
+                    column.removeEventListener('dragleave', handleDragLeave);
+                    column.removeEventListener('drop', handleDrop);
+                    
+                    // Add new event listeners
+                    column.addEventListener('dragover', handleDragOver);
+                    column.addEventListener('dragleave', handleDragLeave);
+                    column.addEventListener('drop', handleDrop);
+                });
+            }
+            
+            // Drag over handler
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+                return false;
+            }
+            
+            // Drag leave handler
+            function handleDragLeave() {
+                this.classList.remove('drag-over');
+            }
+            
+            // Drop handler
+            async function handleDrop(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                const taskId = e.dataTransfer.getData('text/plain');
+                const card = document.querySelector(`.card[data-task-id="${taskId}"]`);
+                const newStatus = this.dataset.status;
+                const oldStatus = card.closest('.column').dataset.status;
+                
+                console.log(`Dropped card ${taskId} from ${oldStatus} to ${newStatus}`);
+                
+                // Don't do anything if dropped in the same column
+                if (newStatus === oldStatus) {
+                    console.log('Same column, ignoring drop');
+                    return;
+                }
+                
+                try {
+                    // Utiliser l'URL correcte qui correspond à la configuration Django
+                    const response = await fetch(`/tasks/${taskId}/update_status/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    
+                    const data = await response.json();
+                    console.log('Server response:', data);
+                    
+                    if (data.status === 'success') {
+                        const cardContainer = this.querySelector('.card-container');
+                        if (card && cardContainer) {
+                            // Move the card to the new column
+                            cardContainer.appendChild(card);
+                            
+                            // Update the card's status badge if it exists
+                            const statusBadge = card.querySelector('.status-badge');
+                            if (statusBadge) {
+                                statusBadge.textContent = newStatus;
+                                statusBadge.className = 'status-badge ' + newStatus.toLowerCase().replace(' ', '-');
+                            }
+                            
+                            // Update the column counts
+                            updateColumnCounts();
+                            
+                            // Show success message
+                            showSuccessMessage('Tâche déplacée avec succès !');
+                            
+                            console.log('Card moved successfully');
+                        }
+                    } else {
+                        console.error('Failed to update task status:', data.message);
+                        showSuccessMessage('Erreur lors du déplacement de la tâche');
+                    }
+                } catch (error) {
+                    console.error('Error updating task status:', error);
+                    showSuccessMessage('Erreur lors du déplacement de la tâche');
+                }
+            }
+            
+            // Function to update column counts
+            function updateColumnCounts() {
+                document.querySelectorAll('.column').forEach(column => {
+                    const count = column.querySelectorAll('.card').length;
+                    const countElement = column.querySelector('.column-count');
+                    if (countElement) {
+                        countElement.textContent = count;
+                    }
+                });
+            }
+            
+            // Initialize drag and drop
+            makeCardsDraggable();
+            makeColumnsDroppable();
+            
+            // Re-initialize drag and drop when the page changes (e.g., after adding a new task)
+            const observer = new MutationObserver(function(mutations) {
+                makeCardsDraggable();
+                makeColumnsDroppable();
+            });
+            
+            // Start observing the document with the configured parameters
+            observer.observe(document.body, { childList: true, subtree: true });
+            
+            console.log('Drag and drop initialized');
+        });
     </script>
+    
+    <style>
+        /* Success message styles */
+        .success-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease-in-out;
+            font-weight: 500;
+        }
+        
+        .success-message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Drag and drop styles */
+        .card {
+            transition: all 0.2s ease;
+            cursor: grab;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .card:active {
+            cursor: grabbing;
+        }
+        
+        .card.dragging {
+            opacity: 0.4;
+            transform: scale(0.98);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .column {
+            transition: all 0.2s ease;
+            min-height: 200px;
+            position: relative;
+        }
+        
+        .column.drag-over {
+            border: 2px dashed #6366f1 !important;
+            background-color: rgba(99, 102, 241, 0.05);
+            border-radius: 8px;
+        }
+        
+        .card-container {
+            min-height: 20px;
+            transition: all 0.2s ease;
+        }
+    </style>
 </body>
 </html>
