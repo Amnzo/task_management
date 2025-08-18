@@ -244,8 +244,8 @@
         .card {
             background: var(--background-card);
             border-radius: 0.875rem;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
+            padding: 1rem 1rem 0.5rem 1rem;  /* Réduit le padding en haut et en bas */
+            margin-bottom: 0.75rem;  /* Réduit la marge en bas */
             border: 1px solid var(--border-color);
             cursor: grab;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -369,19 +369,22 @@
         /* Actions de carte modernisées */
         .card-actions {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            padding-top: 0;
+            gap: 0.25rem;  /* Réduit l'espace entre les boutons */
+            margin: 0.25rem 0 0 0;  /* Réduit la marge en haut et supprime la marge en bas */
+            padding: 0;
+            min-height: 1.5rem;  /* Hauteur minimale pour éviter les sauts de mise en page */
         }
 
         .btn {
             border: none;
             background: none;
             cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
+            padding: 0.25rem 0.4rem;  /* Réduit le padding des boutons */
+            border-radius: 0.375rem;  /* Légèrement plus petit */
             transition: all 0.2s ease;
             color: var(--text-muted);
+            font-size: 0.9em;  /* Taille de police légèrement réduite */
+            line-height: 1;  /* Évite les problèmes d'alignement vertical */
         }
 
         .btn:hover {
