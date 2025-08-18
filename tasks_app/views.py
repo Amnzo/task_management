@@ -308,6 +308,7 @@ def archive_all_done_tasks(request):
 def login_view(request):
     """
     Vue pour la page de connexion
+    Vérifie que l'utilisateur a le niveau ADMIN
     """
     error = None
     
@@ -316,26 +317,22 @@ def login_view(request):
         code = request.POST.get('code')
         
         try:
-            # Vérifier si l'utilisateur existe avec le code fourni
             user = Personne.objects.get(nom__iexact=username, code__iexact=code, actif=True)
-            
-            # Stocker l'ID de l'utilisateur dans la session
-            request.session['user_id'] = user.id
-            request.session['username'] = user.nom
-            
-            # Rediriger vers le tableau de bord
-            return redirect('task_kanban')
-            
+            # Vérifier si l'utilisateur est ADMIN
+            if user.niveau != 'ADMIN':
+                error = "Accès refusé. Vous devez être administrateur pour vous connecter."
+            else:
+                request.session['user_id'] = user.id
+                request.session['username'] = user.nom
+                request.session['is_admin'] = True
+                return redirect('task_kanban')
         except Personne.DoesNotExist:
             error = "Nom d'utilisateur ou code incorrect."
         except Exception as e:
             error = f"Une erreur est survenue : {str(e)}"
     
-    # Si l'utilisateur est déjà connecté, rediriger vers le tableau de bord
-    if 'user_id' in request.session:
-        return redirect('task_kanban')
-        
     return render(request, 'tasks/login.html', {'error': error})
+
 
 def logout_view(request):
     """
