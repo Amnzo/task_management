@@ -639,6 +639,11 @@
         border-bottom: 1px solid #edf2f7;
     }
 
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-10px); }
+    }
+    
     .reassign-dropdown-content {
         display: none;
         position: absolute;
@@ -1026,20 +1031,23 @@
                             <div class="card-title">{{ task.description }}</div>
 
                             <div class="card-footer">
-
                                 <div class="card-actions">
-                                     <div class="meta-item" title="Créé par">
-                                            <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
-                                        </div>
-                                        <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
-                                            <i class="fas fa-flag"></i> {{ task.get_priority_display }}
-                                        </div>
-                                        <div class="meta-item assigned-to" title="Assigné à">
-                                            <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
-                                        </div>
+                                    <div class="meta-item" title="Créé par">
+                                        <i class="fas fa-user-edit"></i> {{ task.created_by.nom }}
+                                    </div>
+                                    <div class="meta-item priority-{{ task.priority|lower }}" title="Priorité">
+                                        <i class="fas fa-flag"></i> {{ task.get_priority_display }}
+                                    </div>
+                                    <div class="meta-item assigned-to" title="Assigné à">
+                                        <i class="fas fa-user-tag"></i> {{ task.assigned_to.nom|default:"Non assigné" }}
+                                    </div>
+                            
+                                    <!-- Bouton Modifier -->
                                     <button class="btn btn-edit" data-task-id="{{ task.id }}" title="Modifier la tâche">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
+                            
+                                    <!-- Bouton Réassigner -->
                                     <button class="btn btn-reassign"
                                             data-task-id="{{ task.id }}"
                                             data-assigned-id="{{ task.assigned_to.id|default:'' }}"
@@ -1047,8 +1055,17 @@
                                             title="Réassigner la tâche">
                                         <i class="fas fa-user-plus"></i>
                                     </button>
+                            
+                                    <!-- Nouveau bouton Archiver -->
+                                    <button class="btn btn-archive"
+                                            data-task-id="{{ task.id }}"
+                                            title="Archiver la tâche">
+                                        <i class="fas fa-archive"></i>
+                                    </button>
+                            
                                 </div>
                             </div>
+                            
 
 
                         </div>
@@ -1277,6 +1294,51 @@
                 }
             });
             
+            // Gestion du clic sur le bouton d'archivage
+            document.addEventListener('click', function(e) {
+                const btnArchive = e.target.closest('.btn-archive');
+                if (!btnArchive) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const taskId = btnArchive.getAttribute('data-task-id');
+                const taskCard = btnArchive.closest('.card');
+                
+                if (!confirm('Êtes-vous sûr de vouloir archiver cette tâche ?')) {
+                    return;
+                }
+                
+                // Envoyer la requête AJAX pour archiver la tâche
+                fetch(`/tasks/${taskId}/archive/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Supprimer la carte de l'interface
+                        if (taskCard) {
+                            taskCard.style.animation = 'fadeOut 0.3s';
+                            setTimeout(() => {
+                                taskCard.remove();
+                                updateColumnCounts();
+                            }, 300);
+                        }
+                        showSuccessMessage('Tâche archivée avec succès');
+                    } else {
+                        throw new Error(data.message || 'Erreur lors de l\'archivage de la tâche');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de l\'archivage de la tâche: ' + error.message);
+                });
+            });
+
             // Gestion de la soumission du formulaire de réassignation
             document.getElementById('save-reassignment').addEventListener('click', function() {
                 const userSelect = document.getElementById('user-select');

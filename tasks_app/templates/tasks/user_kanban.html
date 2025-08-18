@@ -639,6 +639,11 @@
         border-bottom: 1px solid #edf2f7;
     }
 
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(-10px); }
+    }
+    
     .reassign-dropdown-content {
         display: none;
         position: absolute;
@@ -1257,6 +1262,51 @@
                 } else {
                     console.error('Modale non trouvée');
                 }
+            });
+            
+            // Gestion du clic sur le bouton d'archivage
+            document.addEventListener('click', function(e) {
+                const btnArchive = e.target.closest('.btn-archive');
+                if (!btnArchive) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const taskId = btnArchive.getAttribute('data-task-id');
+                const taskCard = btnArchive.closest('.card');
+                
+                if (!confirm('Êtes-vous sûr de vouloir archiver cette tâche ?')) {
+                    return;
+                }
+                
+                // Envoyer la requête AJAX pour archiver la tâche
+                fetch(`/tasks/${taskId}/archive/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Supprimer la carte de l'interface
+                        if (taskCard) {
+                            taskCard.style.animation = 'fadeOut 0.3s';
+                            setTimeout(() => {
+                                taskCard.remove();
+                                updateColumnCounts();
+                            }, 300);
+                        }
+                        showSuccessMessage('Tâche archivée avec succès');
+                    } else {
+                        throw new Error(data.message || 'Erreur lors de l\'archivage de la tâche');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Une erreur est survenue lors de l\'archivage de la tâche: ' + error.message);
+                });
             });
             
             // Gestion de la soumission du formulaire de réassignation

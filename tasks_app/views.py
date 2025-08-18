@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import csrf_exempt
+
 from django.views.generic import ListView
 from django.contrib import messages
 from django.db.models import Case, When, Value, IntegerField, Q
@@ -49,6 +50,7 @@ def task_kanban(request):
         'current_user': current_user,
     }
     return render(request, 'tasks/kanban.html', context)
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_task_status(request, task_id):
@@ -304,6 +306,53 @@ def archive_all_done_tasks(request):
             'message': str(e)
         }, status=500)
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def archive_task(request, task_id):
+    """Vue pour archiver une tâche spécifique"""
+    if 'user_id' not in request.session:
+        return JsonResponse({'status': 'error', 'message': 'Non authentifié'}, status=401)
+        
+    try:
+        # Vérifier que l'utilisateur existe
+        current_user = Personne.objects.get(id=request.session['user_id'])
+        
+        # Récupérer la tâche
+        task = Task.objects.get(id=task_id)
+        
+        # Vérifier que l'utilisateur est soit admin, soit l'assigné de la tâche
+        if current_user.niveau != 'ADMIN' and task.assigned_to_id != current_user.id:
+            return JsonResponse(
+                {'status': 'error', 'message': 'Non autorisé à archiver cette tâche'}, 
+                status=403
+            )
+        
+        # Archiver la tâche
+        task.archived = True
+        task.save()
+        
+        return JsonResponse({
+            'status': 'success', 
+            'message': 'Tâche archivée avec succès',
+            'task_id': task_id
+        })
+        
+    except Task.DoesNotExist:
+        return JsonResponse(
+            {'status': 'error', 'message': 'Tâche non trouvée'}, 
+            status=404
+        )
+    except Personne.DoesNotExist:
+        request.session.flush()
+        return JsonResponse(
+            {'status': 'error', 'message': 'Session expirée'}, 
+            status=401
+        )
+    except Exception as e:
+        return JsonResponse(
+            {'status': 'error', 'message': str(e)}, 
+            status=500
+        )
 
 def user_task_create(request):
     if 'user_id' not in request.session:
