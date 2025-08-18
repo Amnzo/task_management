@@ -1,23 +1,15 @@
+import traceback
+import json
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods, require_POST
-from django.views.generic import ListView
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.views.decorators.http import require_http_methods, require_POST
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import ListView
 from django.contrib import messages
-from django.db.models import Case, When, Value, IntegerField
-import json
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.db.models import Case, When, Value, IntegerField, Q
 from .models import Task, Personne
-from .forms import TaskForm, PersonneForm, TaskForm
+from .forms import TaskForm, PersonneForm
 from django.forms.models import model_to_dict
-from django.contrib import messages
-
-
-from django.db.models import Case, When, Value, IntegerField
 from django.views.generic import ListView
 
 def task_kanban(request):
@@ -109,14 +101,69 @@ def get_users_json(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def update_task(request, task_id):
-    task = get_object_or_404(Task, pk=task_id)
+    print(f"\n=== Début de la mise à jour de la tâche {task_id} ===")
+    print(f"Headers: {dict(request.headers)}")
+    print(f"Content-Type: {request.content_type}")
+    print(f"Méthode: {request.method}")
+    print(f"Utilisateur: {request.user}")
+    print(f"Body brut: {request.body}")
+    print(f"is_ajax: {request.headers.get('X-Requested-With') == 'XMLHttpRequest'}")
+    
+    try:
+        task = get_object_or_404(Task, pk=task_id)
+        print(f"Tâche trouvée: {task}")
+    except Exception as e:
+        print(f"Erreur lors de la récupération de la tâche: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': 'Tâche non trouvée'}, status=404)
     
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
+            # Essayer de décoder le JSON manuellement pour mieux gérer les erreurs
+            try:
+                if isinstance(request.body, bytes):
+                    body_str = request.body.decode('utf-8')
+                else:
+                    body_str = request.body
+                
+                print(f"Corps de la requête (décodé): {body_str}")
+                
+                # Vérifier si le corps est vide
+                if not body_str.strip():
+                    print("Erreur: Le corps de la requête est vide")
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'Le corps de la requête est vide',
+                        'received_data': str(request.body)
+                    }, status=400)
+                
+                data = json.loads(body_str)
+                print(f"Données JSON décodées: {data}")
+                
+                # Vérifier que les champs requis sont présents
+                required_fields = ['description', 'priority', 'status']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    print(f"Champs manquants: {missing_fields}")
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Champs manquants: {missing_fields}',
+                        'missing_fields': missing_fields
+                    }, status=400)
+                
+            except json.JSONDecodeError as e:
+                print(f"Erreur de décodage JSON: {str(e)}")
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Erreur de décodage JSON: {str(e)}',
+                    'received_data': str(request.body)[:100]  # Ne logger que les 100 premiers caractères
+                }, status=400)
+            
             task.description = data.get('description', task.description)
             task.priority = data.get('priority', task.priority)
             task.status = data.get('status', task.status)
+            
+            print(f"Nouvelles valeurs - Description: {task.description}, Priorité: {task.priority}, Statut: {task.status}")
             
             # Mettre à jour la personne assignée si fournie
             assigned_to_id = data.get('assigned_to')
@@ -128,7 +175,9 @@ def update_task(request, task_id):
                     return JsonResponse({'status': 'error', 'message': 'Utilisateur non trouvé'}, status=400)
             
             task.save()
-            return JsonResponse({
+            print("Tâche sauvegardée avec succès")
+            
+            response_data = {
                 'status': 'success',
                 'message': 'Tâche mise à jour avec succès',
                 'task': {
@@ -136,14 +185,24 @@ def update_task(request, task_id):
                     'description': task.description,
                     'priority': task.priority,
                     'status': task.status,
-                    'assigned_to': task.assigned_to.get_full_name() if task.assigned_to else 'Non assigné',
+                    'assigned_to': task.assigned_to.nom if task.assigned_to else 'Non assigné',
                     'assigned_to_id': task.assigned_to.id if task.assigned_to else None,
                 }
-            })
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Données JSON invalides'}, status=400)
+            }
+            
+            print(f"Réponse envoyée: {response_data}")
+            print(f"=== Fin de la mise à jour de la tâche {task_id} ===\n")
+            return JsonResponse(response_data)
+        except json.JSONDecodeError as e:
+            error_msg = f'Données JSON invalides: {str(e)}'
+            print(f"ERREUR: {error_msg}")
+            return JsonResponse({'status': 'error', 'message': error_msg}, status=400)
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            error_msg = f'Erreur lors de la mise à jour: {str(e)}'
+            print(f"ERREUR: {error_msg}")
+            print(f"Type d'erreur: {type(e).__name__}")
+            print(f"Traceback: {traceback.format_exc()}")
+            return JsonResponse({'status': 'error', 'message': error_msg}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Méthode non autorisée'}, status=405)
 

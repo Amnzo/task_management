@@ -1007,13 +1007,15 @@
     <div id="editTaskModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3>Modifier la tâche {{users}}</h3>
+            <h3>Modifier la tâche</h3>
             <form id="edit-task-form">
                 <input type="hidden" id="edit-task-id" name="task_id">
 
                 <div class="form-group">
                     <label for="edit-description">Description :</label>
-                    <textarea id="edit-description" name="description" class="form-control" rows="3" required></textarea>
+                    <textarea id="edit-description" name="description" class="form-control" rows="5" required 
+                              oninput="this.value = this.value.toUpperCase()" 
+                              style="text-transform: uppercase"></textarea>
                 </div>
 
                 <div class="form-group">
@@ -1379,15 +1381,28 @@
                     };
                     
                     console.log('Envoi des données de mise à jour:', formData);
+                    console.log('URL de la requête:', `/tasks/${taskId}/update/`);
+                    console.log('CSRF Token:', getCookie('csrftoken'));
+                    
+                    // Créer une copie de l'objet formData pour le débogage
+                    const requestData = {
+                        description: formData.description,
+                        priority: formData.priority,
+                        status: formData.status
+                    };
+                    
+                    console.log('Données à envoyer:', requestData);
                     
                     // Envoyer la requête AJAX
                     fetch(`/tasks/${taskId}/update/`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
+                            'Content-Type': 'application/json; charset=UTF-8',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify(formData)
+                        credentials: 'same-origin',
+                        body: JSON.stringify(requestData)
                     })
                     .then(response => {
                         if (!response.ok) {
@@ -1397,7 +1412,7 @@
                     })
                     .then(data => {
                         console.log('Réponse du serveur:', data);
-                        if (data.status === 'success') {
+                        if (data && data.status === 'success') {
                             // Mettre à jour l'interface utilisateur
                             const taskCard = document.querySelector(`.card[data-task-id="${taskId}"]`);
                             if (taskCard) {
@@ -1443,12 +1458,18 @@
                             // Afficher un message de succès
                             alert('Tâche mise à jour avec succès');
                         } else {
-                            alert('Erreur lors de la mise à jour de la tâche: ' + (data.message || 'Erreur inconnue'));
+                            const errorMsg = data && data.message ? data.message : 'Erreur inconnue';
+                            console.error('Erreur du serveur:', errorMsg);
+                            alert('Erreur lors de la mise à jour de la tâche: ' + errorMsg);
                         }
                     })
                     .catch(error => {
-                        console.error('Erreur:', error);
-                        alert('Une erreur est survenue lors de la mise à jour de la tâche: ' + error.message);
+                        console.error('Erreur lors de la requête:', {
+                            error: error,
+                            message: error.message,
+                            stack: error.stack
+                        });
+                        alert('Erreur réseau lors de la mise à jour de la tâche. Vérifiez la console pour plus de détails.');
                     });
                 });
             }
@@ -1576,10 +1597,14 @@
                             // Update the column counts
                             updateColumnCounts();
                             
-                            // Show success message
+                            // Show success message and reload the page
                             showSuccessMessage('Tâche déplacée avec succès !');
                             
-                            console.log('Card moved successfully');
+                            console.log('Card moved successfully, reloading page...');
+                            // Reload the page after a short delay to show the success message
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
                         }
                     } else {
                         console.error('Failed to update task status:', data.message);
