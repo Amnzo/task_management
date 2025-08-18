@@ -10,6 +10,7 @@ urlpatterns = [
     
     # Pages protégées par authentification
     path('kanban/', login_required(views.task_kanban), name='task_kanban'),
+    path('mes-taches/', login_required(views.user_kanban), name='user_kanban'),
     path('tasks/<int:task_id>/update_status/', login_required(views.update_task_status), name='update_task_status'),
     path('tasks/<int:task_id>/reassign/', login_required(views.reassign_task), name='reassign_task'),
     path('get_users/', login_required(views.get_users_json), name='get_users_json'),

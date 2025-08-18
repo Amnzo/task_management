@@ -305,10 +305,48 @@ def archive_all_done_tasks(request):
         }, status=500)
 
 
+def user_kanban(request):
+    """
+    Vue Kanban pour les utilisateurs non-administrateurs
+    """
+    if 'user_id' not in request.session:
+        return redirect('login')
+    
+    try:
+        current_user = Personne.objects.get(id=request.session['user_id'])
+    except Personne.DoesNotExist:
+        if 'user_id' in request.session:
+            del request.session['user_id']
+        if 'username' in request.session:
+            del request.session['username']
+        return redirect('login')
+    
+    # Récupérer uniquement les tâches de l'utilisateur connecté
+    tasks = Task.objects.filter(
+        assigned_to=current_user,
+        archived=False
+    ).annotate(
+        priority_order=Case(
+            When(priority='HIGH', then=Value(1)),
+            When(priority='MEDIUM', then=Value(2)),
+            When(priority='LOW', then=Value(3)),
+            output_field=IntegerField(),
+        )
+    ).order_by('priority_order', '-created_at')
+
+    context = {
+        'todo': tasks.filter(status='TO DO'),
+        'inprogress': tasks.filter(status='IN PROGRESS'),
+        'done': tasks.filter(status='DONE'),
+        'current_user': current_user,
+        'is_admin': False,
+    }
+    return render(request, 'tasks/user_kanban.html', context)
+
 def login_view(request):
     """
     Vue pour la page de connexion
-    Vérifie que l'utilisateur a le niveau ADMIN
+    Redirige vers la vue appropriée selon le type d'utilisateur
     """
     error = None
     
@@ -318,14 +356,17 @@ def login_view(request):
         
         try:
             user = Personne.objects.get(nom__iexact=username, code__iexact=code, actif=True)
-            # Vérifier si l'utilisateur est ADMIN
-            if user.niveau != 'ADMIN':
-                error = "Accès refusé. Vous devez être administrateur pour vous connecter."
-            else:
-                request.session['user_id'] = user.id
-                request.session['username'] = user.nom
+            request.session['user_id'] = user.id
+            request.session['username'] = user.nom
+            
+            # Rediriger vers la vue appropriée selon le type d'utilisateur
+            if user.niveau == 'ADMIN':
                 request.session['is_admin'] = True
                 return redirect('task_kanban')
+            else:
+                request.session['is_admin'] = False
+                return redirect('user_kanban')
+                
         except Personne.DoesNotExist:
             error = "Nom d'utilisateur ou code incorrect."
         except Exception as e:
