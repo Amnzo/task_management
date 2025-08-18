@@ -135,12 +135,14 @@
             
             <div class="form-group">
                 <label for="username">UTILISATEUR</label>
-                <input type="text" id="username" name="username" class="form-control" required autofocus>
+                <input type="text" id="username" name="username" class="form-control" required autofocus 
+                       style="text-transform: uppercase" oninput="this.value = this.value.toUpperCase()">
             </div>
             
             <div class="form-group">
                 <label for="code">CODE</label>
-                <input type="password" id="code" name="code" class="form-control" required>
+                <input type="password" id="code" name="code" class="form-control" required
+                       style="text-transform: uppercase" oninput="this.value = this.value.toUpperCase()">
             </div>
             
             <button type="submit" class="btn btn-primary">
