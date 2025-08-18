@@ -320,13 +320,40 @@
             border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
+        /* Style de base */
+        /* Forcer tout le texte en majuscules */
+        body, button, input, select, textarea, .btn, .card-title, .card-meta, .priority-tag, .user-tag, .status-tag {
+            text-transform: uppercase;
+            font-variant: small-caps;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Désactiver la mise en majuscule pour les champs de formulaire qui ont déjà une valeur en majuscules */
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="search"],
+        input[type="url"],
+        textarea,
+        select {
+            text-transform: none;
+        }
+        
+        /* S'assurer que le placeholder est aussi en majuscules */
+        ::placeholder {
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
         /* Titre de carte */
         .card-title {
-            font-weight: 600;
-            margin: 0;
+            font-weight: 700;
+            margin: 0 0 0.5rem 0;
             color: var(--text-primary);
-            font-size: 14px;
-            line-height: 1.2;
+            line-height: 1.4;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.95rem;
         }
 
         /* Métadonnées redesignées */
@@ -385,6 +412,9 @@
             color: var(--text-muted);
             font-size: 0.9em;  /* Taille de police légèrement réduite */
             line-height: 1;  /* Évite les problèmes d'alignement vertical */
+            text-transform: uppercase !important;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .btn:hover {
