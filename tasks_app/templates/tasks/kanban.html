@@ -857,7 +857,7 @@
                 <div class="column-content">
                     <div class="card-container">
                         {% for task in todo %}
-                        <div class="card" data-task-id="{{ task.id }}" draggable="true">
+                        <div class="card" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}" draggable="true">
                             
                             <div class="card-title">{{ task.description }}</div>
                             <div class="card-footer">
@@ -908,7 +908,7 @@
                 <div class="column-content">
                     <div class="card-container">
                         {% for task in inprogress %}
-                        <div class="card" data-task-id="{{ task.id }}" draggable="true">
+                        <div class="card" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}" draggable="true">
 
                             <div class="card-title">{{ task.description }}</div>
 
@@ -965,7 +965,7 @@
                 <div class="column-content">
                     <div class="card-container">
                         {% for task in done %}
-                        <div class="card" data-task-id="{{ task.id }}" draggable="true">
+                        <div class="card" data-task-id="{{ task.id }}" data-user-id="{{ task.assigned_to.id|default:'' }}" draggable="true">
 
                             <div class="card-title">{{ task.description }}</div>
 
