@@ -17,6 +17,7 @@ urlpatterns = [
     path('tasks/<int:task_id>/update/', login_required(views.update_task), name='update_task'),
     path('tasks/new/', login_required(views.task_create), name='task_create'),
     path('users/new/', login_required(views.user_create), name='user_create'),
+    path('mes-taches/nouvelle/', login_required(views.user_task_create), name='user_task_create'),
     path('archived/', login_required(views.ArchivedTaskListView.as_view()), name='archived_tasks'),
     path('archive_all_done/', login_required(views.archive_all_done_tasks), name='archive_all_done'),
 ]

@@ -305,6 +305,38 @@ def archive_all_done_tasks(request):
         }, status=500)
 
 
+def user_task_create(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
+    
+    try:
+        current_user = Personne.objects.get(id=request.session['user_id'])
+    except Personne.DoesNotExist:
+        if 'user_id' in request.session:
+            del request.session['user_id']
+        if 'username' in request.session:
+            del request.session['username']
+        return redirect('login')
+    
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.assigned_to = current_user  # Assigner à l'utilisateur connecté
+            task.created_by = current_user
+            task.save()
+            messages.success(request, 'Tâche créée avec succès')
+            return redirect('user_kanban')
+    else:
+        form = TaskForm()
+    
+    return render(request, 'tasks/user_task_form.html', {
+        'form': form,
+        'title': 'Nouvelle tâche'
+    })
+
+
+
 def user_kanban(request):
     """
     Vue Kanban pour les utilisateurs non-administrateurs
