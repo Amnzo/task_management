@@ -11,9 +11,12 @@ class Personne(models.Model):
     actif = models.BooleanField(default=True)
     niveau = models.CharField(
         max_length=20,
-        choices=(('admin', 'Admin'), ('user-simple', 'Utilisateur simple')),
-        default='user-simple'
-    )
+        choices=(
+            ('ADMIN', 'ADMIN'),
+            ('USER-SIMPLE', 'UTILISATEUR SIMPLE'),
+        ),
+        default='USER-SIMPLE'
+)
 
     def __str__(self):
         return f"{self.nom}, {self.id}"
@@ -21,9 +24,9 @@ class Personne(models.Model):
 
 class Task(models.Model):
     STATUS_CHOICES = (
-        ('TO DO', 'À faire'),
-        ('IN PROGRESS', 'En cours'),
-        ('DONE', 'Terminée'),
+        ('TO DO', 'À FAIRE'),
+        ('IN PROGRESS', 'EN COURS'),
+        ('DONE', 'TERMINÉE'),
     )
 
     PRIORITY_CHOICES = (

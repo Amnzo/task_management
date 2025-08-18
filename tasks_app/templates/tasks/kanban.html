@@ -1257,11 +1257,13 @@
                         document.getElementById('reassignTaskModal').style.display = 'none';
                         document.body.style.overflow = 'auto'; // Rétablir le défilement de la page
                         
-                        // Afficher un message de succès
-                        alert('Tâche réassignée avec succès!');
+                        // Afficher un message de succès élégant
+                        showSuccessMessage('La tâche a été réassignée avec succès');
                         
-                        // Recharger la page pour mettre à jour les données
-                        window.location.reload();
+                        // Mettre à jour l'interface après un court délai pour laisser le temps de voir le message
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
                     } else {
                         alert('Erreur lors de la réassignation: ' + (data.message || 'Erreur inconnue'));
                     }
@@ -1488,8 +1490,11 @@
                             // Fermer la modale
                             closeAllModals();
                             
-                            // Afficher un message de succès
-                            alert('Tâche mise à jour avec succès');
+                            // Afficher un message de succès élégant et recharger la page après un court délai
+                            showSuccessMessage('La tâche a été mise à jour avec succès');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
                         } else {
                             const errorMsg = data && data.message ? data.message : 'Erreur inconnue';
                             console.error('Erreur du serveur:', errorMsg);
