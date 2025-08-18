@@ -13,6 +13,22 @@ from django.forms.models import model_to_dict
 from django.views.generic import ListView
 
 def task_kanban(request):
+    # Vérifier si l'utilisateur est connecté
+    if 'user_id' not in request.session:
+        return redirect('login')
+    
+    # Récupérer l'utilisateur connecté
+    try:
+        current_user = Personne.objects.get(id=request.session['user_id'])
+    except Personne.DoesNotExist:
+        # Si l'utilisateur n'existe plus, déconnecter et rediriger vers la page de connexion
+        if 'user_id' in request.session:
+            del request.session['user_id']
+        if 'username' in request.session:
+            del request.session['username']
+        return redirect('login')
+    
+    # Récupérer les tâches
     tasks = Task.objects.filter(archived=False).annotate(
         priority_order=Case(
             When(priority='HIGH', then=Value(1)),
@@ -20,7 +36,7 @@ def task_kanban(request):
             When(priority='LOW', then=Value(3)),
             output_field=IntegerField(),
         )
-    ).order_by('priority_order', '-created_at')  # d’abord priorité, ensuite date desc
+    ).order_by('priority_order', '-created_at')
 
     users = Personne.objects.filter(actif=True)
 
@@ -29,6 +45,7 @@ def task_kanban(request):
         'inprogress': tasks.filter(status='IN PROGRESS'),
         'done': tasks.filter(status='DONE'),
         'users': users,
+        'current_user': current_user,
     }
     return render(request, 'tasks/kanban.html', context)
 
@@ -286,3 +303,46 @@ def archive_all_done_tasks(request):
             'status': 'error',
             'message': str(e)
         }, status=500)
+
+
+def login_view(request):
+    """
+    Vue pour la page de connexion
+    """
+    error = None
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        code = request.POST.get('code')
+        
+        try:
+            # Vérifier si l'utilisateur existe avec le code fourni
+            user = Personne.objects.get(nom__iexact=username, code__iexact=code, actif=True)
+            
+            # Stocker l'ID de l'utilisateur dans la session
+            request.session['user_id'] = user.id
+            request.session['username'] = user.nom
+            
+            # Rediriger vers le tableau de bord
+            return redirect('task_kanban')
+            
+        except Personne.DoesNotExist:
+            error = "Nom d'utilisateur ou code incorrect."
+        except Exception as e:
+            error = f"Une erreur est survenue : {str(e)}"
+    
+    # Si l'utilisateur est déjà connecté, rediriger vers le tableau de bord
+    if 'user_id' in request.session:
+        return redirect('task_kanban')
+        
+    return render(request, 'tasks/login.html', {'error': error})
+
+def logout_view(request):
+    """
+    Vue pour la déconnexion
+    """
+    if 'user_id' in request.session:
+        del request.session['user_id']
+    if 'username' in request.session:
+        del request.session['username']
+    return redirect('login')

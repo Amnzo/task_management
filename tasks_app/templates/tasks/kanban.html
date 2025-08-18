@@ -809,34 +809,90 @@
 <body>
     <!-- Header moderne -->
     <div class="header">
-        <h1>
-            <i class="fas fa-tasks"></i>
-            Gestion des tâches
-        </h1>
+        <div class="header-left">
+            <h1>
+                <i class="fas fa-tasks"></i>
+                Tableau de bord
+            </h1>
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span>{{ current_user.nom }}</span>
+            </div>
+        </div>
         <div class="header-actions">
             <a href="{% url 'archived_tasks' %}" class="btn-primary" style="background-color: #6b7280;">
-                <i class="fas fa-archive"></i>
-                Tâches archivées
+                <i class="fas fa-archive"></i> Tâches archivées
             </a>
-            <div class="filter-container" style="margin-right: 15px;">
+            <div class="filter-container">
                 <select id="user-filter" class="filter-select">
                     <option value="">Tous les utilisateurs</option>
                     {% for user in users %}
-                    <option value="{{ user.id }}">{{ user.nom }}</option>
+                        <option value="{{ user.id }}">{{ user.nom }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <a href="{% url 'user_create' %}" class="btn-primary">
-                <i class="fas fa-user-plus"></i>
-                Nouvel utilisateur
+            <a href="{% url 'user_create' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Nouvel utilisateur
             </a>
-            <a href="{% url 'task_create' %}" class="btn-primary">
-                <i class="fas fa-plus"></i>
-                Nouvelle tâche
+            <a href="{% url 'task_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle tâche
             </a>
-            
+            <a href="{% url 'logout' %}" class="btn btn-secondary">
+                <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
         </div>
     </div>
+    
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .user-info i {
+            color: #4b5563;
+            font-size: 1.25rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        
+        @media (max-width: 1200px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
 
     <!-- Notification -->
     <div id="notification" class="notification"></div>
